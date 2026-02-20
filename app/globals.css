@@ -50,7 +50,9 @@
 }
 
 /* --- Reset & Base --- */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -79,6 +81,7 @@ a {
   text-decoration: none;
   transition: color var(--transition-smooth);
 }
+
 a:hover {
   color: var(--color-amber);
 }
@@ -87,18 +90,28 @@ a:hover {
 ::-webkit-scrollbar {
   width: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background-color: var(--color-pencil);
   border-radius: 20px;
 }
 
 /* --- Typography Utilities --- */
-.font-serif { font-family: var(--font-serif); }
-.font-sans { font-family: var(--font-sans); }
-.font-mono { font-family: var(--font-mono); }
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
 
 /* --- Layout Utilities --- */
 .page-container {
@@ -172,10 +185,12 @@ a:hover {
   font-weight: 500;
   transition: color var(--transition-smooth);
 }
+
 .site-nav a:hover,
 .site-nav a.active {
   color: var(--color-charcoal);
 }
+
 .site-nav a.active {
   border-bottom: 2px solid var(--color-amber);
   padding-bottom: 2px;
@@ -314,6 +329,7 @@ a:hover {
   color: white;
   box-shadow: 0 4px 12px rgba(235, 163, 82, 0.25);
 }
+
 .card-button.primary:hover {
   filter: brightness(1.05);
   box-shadow: 0 6px 16px rgba(235, 163, 82, 0.35);
@@ -324,6 +340,7 @@ a:hover {
   color: var(--color-charcoal);
   border: 1px solid var(--color-pencil);
 }
+
 .card-button.secondary:hover {
   border-color: var(--color-amber);
   color: var(--color-amber);
@@ -356,6 +373,7 @@ a:hover {
   position: relative;
   display: inline-block;
 }
+
 .highlighter-underline::after {
   content: '';
   position: absolute;
@@ -483,7 +501,8 @@ a:hover {
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 0.85em;
-  color: var(--color-amber);
+  color: var(--color-charcoal);
+  /* color: var(--color-amber); */
 }
 
 /* Equation pill */
@@ -511,6 +530,7 @@ a:hover {
   margin: 0 auto;
   width: 100%;
 }
+
 .polaroid:hover {
   transform: rotate(0deg);
 }
