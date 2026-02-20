@@ -27,8 +27,9 @@ export const metadata = {
     images: ["/images/og-image.png"],
   },
   icons: {
-    icon: "/images/logo.png",
-    apple: "/images/logo.png",
+    icon: [{ url: "/images/logo.png", type: "image/png" }],
+    apple: [{ url: "/images/logo.png", type: "image/png" }],
+    shortcut: [{ url: "/images/logo.png" }],
   },
 };
 
