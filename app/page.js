@@ -9,6 +9,7 @@ const assignments = [
       "Build a 2D Monte Carlo simulation to model atomic diffusion and phase changes using the Boltzmann distribution.",
     status: "active",
     featured: true,
+    image: "/images/monte_carlo_card.png",
   },
 ];
 
@@ -50,6 +51,23 @@ export default function HomePage() {
                 </h3>
                 <p className="card-description">{a.description}</p>
               </div>
+
+              {a.image && (
+                <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+                  <img
+                    src={a.image}
+                    alt={a.title}
+                    style={{
+                      width: "100%",
+                      height: "140px",
+                      objectFit: "cover",
+                      borderRadius: "var(--radius-md)",
+                      border: "1px solid rgba(225,226,230,0.5)"
+                    }}
+                  />
+                </div>
+              )}
+
               <div className="card-footer">
                 <button className="card-button primary" tabIndex={-1}>
                   Open Assignment →

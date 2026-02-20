@@ -4,6 +4,32 @@ export const metadata = {
   title: "MAT206 — Kinetics of Materials",
   description:
     "Weekly assignments for the Kinetics of Materials course. Interactive simulations and scientific explorations.",
+  openGraph: {
+    title: "MAT206 — Kinetics of Materials",
+    description: "Weekly assignments for the Kinetics of Materials course. Interactive simulations and scientific explorations.",
+    url: "https://mat206.vercel.app",
+    siteName: "MAT206",
+    images: [
+      {
+        url: "/images/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Kinetics of Materials - Digital Humanism Banner",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MAT206 — Kinetics of Materials",
+    description: "Weekly assignments for the Kinetics of Materials course.",
+    images: ["/images/og-image.png"],
+  },
+  icons: {
+    icon: "/images/logo.png",
+    apple: "/images/logo.png",
+  },
 };
 
 export default function RootLayout({ children }) {
