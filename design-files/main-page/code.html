@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kinetics of Materials Assignment Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;family=Lora:ital,wght@0,400;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#eba352", // Highlighter Amber
+                        "background-light": "#fdfbf7", // Warm Cream
+                        "background-dark": "#211911",
+                        "charcoal": "#2C303A", // Fountain Pen Charcoal
+                        "pencil": "#E1E2E6", // Pencil Lead Gray
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "serif": ["Lora", "serif"],
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                    backgroundImage: {
+                        'paper-texture': "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmRmYmY3Ii8+CjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiM4ODc3NjMiIG9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #d1d5db;
+            border-radius: 20px;
+        }
+        
+        /* Subtle texture overlay */
+        .bg-paper {
+            background-color: #fdfbf7;
+            background-image: radial-gradient(#88776311 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        /* Hand-drawn border effect for cards */
+        .card-shadow {
+            box-shadow: 2px 4px 12px -2px rgba(44, 48, 58, 0.08);
+            transition: all 0.3s ease;
+        }
+        .card-shadow:hover {
+            transform: translateY(-4px) rotate(0.5deg);
+            box-shadow: 4px 8px 16px -4px rgba(44, 48, 58, 0.12);
+        }
+
+        /* Pencil sketch animation */
+        @keyframes draw {
+            from { stroke-dashoffset: 1000; }
+            to { stroke-dashoffset: 0; }
+        }
+        .sketch-path {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 0;
+            animation: draw 3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-charcoal overflow-x-hidden">
+<!-- Background Sketches (Marginalia) -->
+<div class="fixed inset-0 pointer-events-none z-0 opacity-40 overflow-hidden">
+<!-- Top Right: Grain Boundary Sketch -->
+<svg class="absolute top-20 right-[-50px] w-96 h-96 text-pencil transform rotate-12" fill="none" viewbox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<path class="sketch-path" d="M20 100 Q 60 40 100 100 T 180 100 M 40 120 Q 80 60 120 120 T 180 120" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+<circle cx="40" cy="80" fill="currentColor" r="3"></circle>
+<circle cx="60" cy="70" fill="currentColor" r="3"></circle>
+<circle cx="80" cy="85" fill="currentColor" r="3"></circle>
+<circle cx="100" cy="65" fill="currentColor" r="3"></circle>
+</svg>
+<!-- Bottom Left: Lattice Structure -->
+<svg class="absolute bottom-0 left-[-20px] w-[500px] h-[500px] text-pencil" fill="none" viewbox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<path class="sketch-path" d="M40 40 L 160 40 L 160 160 L 40 160 Z M 40 40 L 160 160 M 160 40 L 40 160" stroke="currentColor" stroke-dasharray="4 4" stroke-width="1.5"></path>
+<circle cx="40" cy="40" fill="currentColor" r="4"></circle>
+<circle cx="160" cy="40" fill="currentColor" r="4"></circle>
+<circle cx="160" cy="160" fill="currentColor" r="4"></circle>
+<circle cx="40" cy="160" fill="currentColor" r="4"></circle>
+<circle cx="100" cy="100" fill="currentColor" r="4"></circle>
+</svg>
+</div>
+<div class="relative z-10 flex h-auto min-h-screen w-full flex-col group/design-root">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Navigation Header -->
+<div class="flex justify-center w-full px-6 pt-6 pb-2">
+<div class="layout-content-container flex flex-col max-w-[1080px] flex-1">
+<header class="flex items-center justify-between whitespace-nowrap px-4 py-3 rounded-2xl bg-white/50 backdrop-blur-sm border border-stone-200/50 shadow-sm">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3 text-charcoal">
+<div class="size-10 bg-primary/20 rounded-full flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">science</span>
+</div>
+<h2 class="text-charcoal text-lg font-serif font-bold italic tracking-tight">Kinetics 101</h2>
+</div>
+<nav class="hidden md:flex items-center gap-6 ml-4">
+<a class="text-charcoal hover:text-primary transition-colors text-sm font-medium border-b-2 border-primary" href="#">Assignments</a>
+<a class="text-stone-500 hover:text-primary transition-colors text-sm font-medium" href="#">Grades</a>
+<a class="text-stone-500 hover:text-primary transition-colors text-sm font-medium" href="#">Resources</a>
+<a class="text-stone-500 hover:text-primary transition-colors text-sm font-medium" href="#">Syllabus</a>
+</nav>
+</div>
+<div class="flex flex-1 justify-end gap-6 items-center">
+<label class="hidden sm:flex flex-col min-w-40 !h-10 max-w-64 transition-all focus-within:max-w-72">
+<div class="flex w-full flex-1 items-center rounded-full bg-white border border-stone-200 shadow-sm px-4 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary">
+<span class="material-symbols-outlined text-stone-400 text-[20px]">search</span>
+<input class="w-full bg-transparent border-none focus:ring-0 text-sm placeholder:text-stone-400 text-charcoal ml-2" placeholder="Search notes..."/>
+</div>
+</label>
+<div class="relative group cursor-pointer">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 border-2 border-white shadow-md transition-transform group-hover:scale-105" data-alt="Profile picture of a student" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDGO9iUjD6xJiIxv0dgsJLqkcZE_DL9UjWFkNJAQtvgSW60LAqaC76CG9I6EBdqelGK9YFJKx6SxvGinho3gmFvIQGXjjoEJpZgzU9vKrYWN0fNoT_QUm3KqCuFNNn9puh61L127cqKSTZxxlbVlYa73fxLmR2pNxl15F9F7Q7z89wKYNUT_6gi6gP3B0vB5c9Q8TAcL9Am0NtcD3PCThvg0fgu9XDx0A_yNJUKpiMwZCcvUvLK6V0fxumGicundFAdR7tK7VuJ");'>
+</div>
+<div class="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-2 border-white"></div>
+</div>
+</div>
+</header>
+</div>
+</div>
+<!-- Main Content Area -->
+<div class="px-6 flex flex-1 justify-center py-5">
+<div class="layout-content-container flex flex-col max-w-[1080px] flex-1">
+<!-- Title Section -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 px-4">
+<div class="flex flex-col gap-2 relative">
+<!-- Decorative underline that looks like highlighter -->
+<div class="absolute -bottom-2 left-0 w-full h-4 bg-primary/20 -rotate-1 rounded-full blur-[1px]"></div>
+<h1 class="text-charcoal text-5xl md:text-6xl font-serif font-medium leading-tight tracking-tight relative z-10">
+                                Kinetics of Materials
+                            </h1>
+<p class="text-stone-500 text-lg font-serif italic mt-2 ml-1">Fall Semester 2024 • Prof. A. Physicist</p>
+</div>
+<div class="flex gap-2 flex-wrap">
+<button class="px-6 py-2.5 rounded-full bg-charcoal text-white text-sm font-medium hover:bg-black transition-colors shadow-lg shadow-charcoal/20 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span> New Note
+                            </button>
+</div>
+</div>
+<!-- Filter Tabs -->
+<div class="flex gap-3 px-4 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-charcoal text-white px-5 shadow-md">
+<p class="text-sm font-medium">All</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-stone-200 text-stone-600 px-5 hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-all">
+<span class="size-2 rounded-full bg-primary animate-pulse"></span>
+<p class="text-sm font-medium">Due Soon</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-stone-200 text-stone-600 px-5 hover:bg-stone-50 transition-colors">
+<p class="text-sm font-medium">Graded</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-stone-200 text-stone-600 px-5 hover:bg-stone-50 transition-colors">
+<p class="text-sm font-medium">Missing</p>
+</button>
+</div>
+<!-- Assignment Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4 pb-20">
+<!-- Card 1: Due Soon (Active/Hovered state design as default for demo) -->
+<div class="group relative flex flex-col justify-between h-[380px] bg-white rounded-[2rem] p-6 card-shadow border-t-[6px] border-primary transform hover:-translate-y-2 transition-all duration-300">
+<!-- Paper Texture Overlay on Card -->
+<div class="absolute inset-0 bg-paper opacity-50 rounded-[2rem] pointer-events-none"></div>
+<div class="relative z-10">
+<div class="flex justify-between items-start mb-4">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-primary/20 text-charcoal text-xs font-bold uppercase tracking-wider">
+                                        Pending Review
+                                    </span>
+<span class="material-symbols-outlined text-stone-400 cursor-pointer hover:text-primary">bookmark_border</span>
+</div>
+<h3 class="text-2xl font-serif font-bold text-charcoal leading-snug mb-3">
+                                    Week 4: Monte Carlo Simulation
+                                </h3>
+<p class="text-stone-500 text-sm leading-relaxed mb-4 font-serif">
+                                    Simulate grain growth using the Potts model. Analyze the effect of temperature on boundary mobility.
+                                </p>
+<div class="flex items-center gap-2 text-stone-500 text-xs font-medium uppercase tracking-wide">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+<span>Due: Oct 24 • 11:59 PM</span>
+</div>
+</div>
+<div class="relative z-10 mt-4">
+<div class="w-full h-32 rounded-xl bg-cover bg-center mb-4 border border-stone-100 opacity-90 group-hover:opacity-100 transition-opacity" data-alt="Abstract digital simulation pattern showing Monte Carlo grain growth" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD_1wTkM0ZqMuiTLkfJOfulSou9PGibb-PXogrisohUhpwMqNQRvo4F30SXgHIKMjL3Vp6y9Nf2xi3ubIt1lNv-Qvzm9O158F0xGO0JdAXAIs79cBK2BffKd9hI3W62U_N5o7eJYrNyeJP11v8CgUHW7z3WUCpUFrAQAiXW7hm9zWQ3jjJ5gQbH8mPPzn0umSxCY3u1ETkPaShQ5FOjg5ayXqrN9k0PEZb0CZSH0aa6ecMCeiHH1wGrsOvASHnhJTL73qfmHjUd');">
+</div>
+<button class="w-full h-11 flex items-center justify-center gap-2 rounded-full bg-primary text-white text-sm font-bold shadow-md shadow-primary/30 hover:shadow-lg hover:brightness-105 transition-all">
+<span>Continue Assignment</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 2: Graded -->
+<div class="group relative flex flex-col justify-between h-[380px] bg-white rounded-[2rem] p-6 card-shadow">
+<!-- Paper Texture Overlay on Card -->
+<div class="absolute inset-0 bg-paper opacity-50 rounded-[2rem] pointer-events-none"></div>
+<div class="relative z-10">
+<div class="flex justify-between items-start mb-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold uppercase tracking-wider border border-green-200">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                        Graded: 92/100
+                                    </span>
+<span class="material-symbols-outlined text-stone-400 cursor-pointer hover:text-primary">bookmark_border</span>
+</div>
+<h3 class="text-2xl font-serif font-bold text-charcoal leading-snug mb-3 group-hover:text-primary transition-colors">
+                                    Week 3: Phase Transformations
+                                </h3>
+<p class="text-stone-500 text-sm leading-relaxed mb-4 font-serif">
+                                    Study of nucleation and growth kinetics. Analysis of the Avrami equation application.
+                                </p>
+<div class="flex items-center gap-2 text-stone-400 text-xs font-medium uppercase tracking-wide">
+<span class="material-symbols-outlined text-[16px]">history</span>
+<span>Submitted: Oct 17</span>
+</div>
+</div>
+<div class="relative z-10 mt-4">
+<div class="w-full h-32 rounded-xl bg-cover bg-center mb-4 border border-stone-100 opacity-80 group-hover:opacity-100 transition-opacity grayscale group-hover:grayscale-0" data-alt="Microscopic view of phase transformation in metal alloy" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCbBpcJA5EVhCO53c3C2w7d35cqsP_Mrc9lFeMTwZOuoLiMKkHkOYLeR1qzXUAowH8PVMKTVdNZX0cHdfgsP_uXo-j3NeQxatvj4B87sYxcQ0annSsGFa1qHZwUm2HPR7KBCW3wCmmPqsbR8clSsfFZc_GIaLra3q6Z2hPXP8AsdYo8KRdb2iBHs1wEux_fY__djyjwx6pH9JwiB08trxF9unuHJSrSkZGZMbTV5OtDlj1pTpUSPIaRffkJHQ98pmaSns49ysYP');">
+</div>
+<button class="w-full h-11 flex items-center justify-center gap-2 rounded-full bg-stone-100 text-charcoal text-sm font-medium hover:bg-stone-200 transition-colors">
+<span>View Feedback</span>
+</button>
+</div>
+</div>
+<!-- Card 3: New / Upcoming -->
+<div class="group relative flex flex-col justify-between h-[380px] bg-white rounded-[2rem] p-6 card-shadow">
+<!-- Paper Texture Overlay on Card -->
+<div class="absolute inset-0 bg-paper opacity-50 rounded-[2rem] pointer-events-none"></div>
+<div class="relative z-10">
+<div class="flex justify-between items-start mb-4">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-stone-100 text-stone-500 text-xs font-bold uppercase tracking-wider">
+                                        Not Started
+                                    </span>
+<span class="material-symbols-outlined text-stone-400 cursor-pointer hover:text-primary">bookmark_border</span>
+</div>
+<h3 class="text-2xl font-serif font-bold text-charcoal leading-snug mb-3 group-hover:text-primary transition-colors">
+                                    Week 5: Nucleation Rates
+                                </h3>
+<p class="text-stone-500 text-sm leading-relaxed mb-4 font-serif">
+                                    Calculate homogeneous vs heterogeneous nucleation rates for solidification.
+                                </p>
+<div class="flex items-center gap-2 text-stone-500 text-xs font-medium uppercase tracking-wide">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+<span>Due: Oct 31 • 11:59 PM</span>
+</div>
+</div>
+<div class="relative z-10 mt-4">
+<div class="w-full h-32 rounded-xl bg-cover bg-center mb-4 border border-stone-100 opacity-80 group-hover:opacity-100 transition-opacity grayscale group-hover:grayscale-0" data-alt="Abstract crystal nucleation visualization" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCZMwefsdZABCzrvXGPlnhdmSLMefNbPiciTyx3Rc0WY2n7ycaRxOfLBA6ZVRODPpXe1FcYRqLunGEgOsF0r49jZ7y84V80ZHLeuMWCZoQjdhGQtCF6qg2UZxfr8AJ2ligv8A_0N20B6tb1yMdZXghSpH03MaBgpW6ErtWHCdtgbIrVk3Izit4WVhUNO-GHg1riD6VDlh1m8LPzd7hbJ4E95zSjWSZhXjqWRoPVfnAhTETLEQlNGYvH7lQONnF6A0SaTN_OSGao');">
+</div>
+<button class="w-full h-11 flex items-center justify-center gap-2 rounded-full border border-stone-200 text-charcoal text-sm font-medium hover:border-primary hover:text-primary transition-colors">
+<span>Start Assignment</span>
+</button>
+</div>
+</div>
+<!-- Card 4: Reference Material -->
+<div class="group relative flex flex-col justify-between h-[380px] bg-[#f8f6f4] rounded-[2rem] p-6 border border-dashed border-stone-300 hover:border-solid hover:border-primary transition-all">
+<div class="relative z-10 flex flex-col h-full">
+<div class="flex justify-between items-start mb-4">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-white text-stone-500 text-xs font-bold uppercase tracking-wider border border-stone-200">
+                                        Reference
+                                    </span>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center text-center">
+<div class="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm text-primary">
+<span class="material-symbols-outlined text-3xl">menu_book</span>
+</div>
+<h3 class="text-xl font-serif font-bold text-charcoal leading-snug mb-2">
+                                        Course Syllabus
+                                    </h3>
+<p class="text-stone-500 text-sm mb-6">
+                                        Access the full course schedule, reading materials, and grading policies.
+                                    </p>
+</div>
+<button class="w-full h-11 flex items-center justify-center gap-2 rounded-full bg-white border border-stone-200 text-charcoal text-sm font-medium hover:shadow-md transition-all">
+<span>Download PDF</span>
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Action Button for Mobile/Desktop -->
+<div class="fixed bottom-8 right-8 z-50">
+<button class="flex items-center justify-center w-14 h-14 rounded-full bg-charcoal text-white shadow-xl hover:scale-110 hover:bg-black transition-all group">
+<span class="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform">add</span>
+</button>
+</div>
+</div>
+</div>
+</body></html>

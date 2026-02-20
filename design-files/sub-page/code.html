@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Monte Carlo Simulation Guide</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Lora:ital,wght@0,400;0,600;0,700;1,400&amp;family=Fira+Code:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#eba352",
+                        "background-light": "#FDFBF7",
+                        "background-dark": "#211911",
+                        "paper-cream": "#FDFBF7",
+                        "ink-black": "#181511",
+                        "pencil-gray": "#4A4A4A",
+                        "secondary-gray": "#887763",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "serif": ["Lora", "serif"],
+                        "mono": ["Fira Code", "monospace"],
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                    backgroundImage: {
+                        'paper-texture': "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E\")",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom Utilities for the tactile feel */
+        .hand-drawn-border {
+            border-radius: 2px 255px 3px 25px / 255px 5px 225px 3px;
+        }
+        
+        .wavy-divider {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10 Q 25 20 50 10 T 100 10' fill='none' stroke='%23eba352' stroke-width='2'/%3E%3C/svg%3E");
+            background-repeat: repeat-x;
+            background-position: center;
+        }
+
+        .polaroid-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-paper-texture bg-background-light dark:bg-background-dark text-ink-black font-display antialiased min-h-screen flex flex-col">
+<!-- Sticky Header -->
+<header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-[#f4f2f0] px-6 py-4 transition-all duration-300">
+<div class="max-w-[1200px] mx-auto flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">science</span>
+<div class="flex flex-col">
+<span class="text-xs uppercase tracking-wider text-secondary-gray font-bold">Kinetics of Materials</span>
+<h1 class="text-sm font-semibold text-ink-black">Module 4: Monte Carlo Methods</h1>
+</div>
+</div>
+<nav class="hidden md:flex items-center gap-6 text-sm font-medium text-secondary-gray">
+<a class="hover:text-primary transition-colors" href="#">Syllabus</a>
+<a class="text-ink-black hover:text-primary transition-colors" href="#">Guide</a>
+<a class="hover:text-primary transition-colors" href="#">Simulation</a>
+<div class="h-4 w-px bg-gray-300"></div>
+<button class="flex items-center gap-2 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">account_circle</span>
+<span>Profile</span>
+</button>
+</nav>
+</div>
+</header>
+<main class="flex-grow w-full relative">
+<!-- Main Content Container -->
+<div class="relative w-full max-w-[1200px] mx-auto grid grid-cols-1 xl:grid-cols-[1fr_800px_1fr] gap-8 py-12 px-4 md:px-8">
+<!-- Left Margin (Decorations) -->
+<div class="hidden xl:flex flex-col items-end pt-40 pr-4 opacity-60">
+<div class="sticky top-32 flex flex-col gap-2 items-center">
+<span class="text-xs font-serif italic text-secondary-gray -rotate-12 transform">Figure 1.1: 2D Lattice</span>
+<!-- Hand-drawn lattice sketch -->
+<svg class="text-pencil-gray" fill="none" height="120" stroke="currentColor" stroke-linecap="round" stroke-width="1.5" viewbox="0 0 100 100" width="120">
+<path d="M10 10 H90 M10 30 H90 M10 50 H90 M10 70 H90 M10 90 H90" stroke-dasharray="5,2"></path>
+<path d="M10 10 V90 M30 10 V90 M50 10 V90 M70 10 V90 M90 10 V90" stroke-dasharray="5,2"></path>
+<circle cx="30" cy="30" fill="currentColor" r="3"></circle>
+<circle cx="50" cy="50" fill="currentColor" r="3"></circle>
+<circle cx="70" cy="30" fill="currentColor" r="3"></circle>
+<circle cx="30" cy="70" fill="currentColor" r="3"></circle>
+</svg>
+</div>
+</div>
+<!-- Central Reading Column -->
+<article class="flex flex-col gap-10 max-w-[800px] mx-auto w-full">
+<!-- Title Block -->
+<div class="flex flex-col gap-4 text-center mb-6">
+<span class="text-primary font-mono text-xs tracking-widest uppercase">Assignment 04</span>
+<h1 class="font-serif text-4xl md:text-5xl font-bold text-ink-black leading-tight">
+                        Monte Carlo Simulation <br/> Prompting Guide
+                    </h1>
+<p class="text-secondary-gray font-serif italic text-lg">
+                        Navigating the energy landscape of crystal growth.
+                    </p>
+</div>
+<!-- Context Block -->
+<section class="relative bg-white p-6 rounded-r-xl shadow-sm border-l-4 border-primary">
+<h3 class="text-sm font-bold uppercase tracking-wider text-secondary-gray mb-2">Context</h3>
+<p class="font-serif text-lg leading-relaxed text-ink-black">
+                        This assignment explores stochastic processes in crystal growth using the Metropolis algorithm to determine equilibrium states. We will simulate how atoms find their most stable configuration by randomly exploring the energy landscape.
+                    </p>
+</section>
+<!-- Step 1 -->
+<section class="flex flex-col gap-4">
+<div class="flex items-center gap-3 mb-2">
+<span class="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary font-bold font-mono text-sm">01</span>
+<h2 class="font-serif text-2xl font-semibold text-ink-black">Initialize the Lattice</h2>
+</div>
+<div class="prose prose-stone max-w-none text-pencil-gray">
+<p class="leading-relaxed">
+                            To begin, we must initialize a discrete lattice representing the atomic structure. Imagine a checkerboard where each intersection represents a potential site for an atom. The system evolves by attempting random changes.
+                        </p>
+<p class="leading-relaxed mt-4">
+                            In your code, create a 2D array of size <code class="font-mono bg-stone-100 px-1 py-0.5 rounded text-sm text-primary">N x N</code>. Populate this grid initially with random spin states (representing atomic orientations) of either +1 or -1.
+                        </p>
+</div>
+<!-- Code Snippet -->
+<div class="bg-stone-900 rounded-xl p-5 overflow-x-auto shadow-inner mt-2 group relative">
+<div class="absolute top-3 right-3 flex gap-1">
+<div class="w-2.5 h-2.5 rounded-full bg-red-500/50"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-yellow-500/50"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-green-500/50"></div>
+</div>
+<pre class="font-mono text-sm text-gray-300"><span class="text-purple-400">import</span> numpy <span class="text-purple-400">as</span> np
+
+<span class="text-gray-500"># Step 1: Initialize Lattice</span>
+N = <span class="text-orange-300">50</span>
+lattice = np.random.choice([<span class="text-orange-300">-1</span>, <span class="text-orange-300">1</span>], size=(N, N))
+</pre>
+</div>
+</section>
+<!-- Divider -->
+<div class="h-6 w-full wavy-divider my-4 opacity-60"></div>
+<!-- Step 4 (Metropolis) -->
+<section class="flex flex-col gap-4">
+<div class="flex items-center gap-3 mb-2">
+<span class="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary font-bold font-mono text-sm">04</span>
+<h2 class="font-serif text-2xl font-semibold text-ink-black">The Metropolis Algorithm</h2>
+</div>
+<p class="text-pencil-gray leading-relaxed">
+                        The core of the simulation lies in the decision-making process. For every random flip of an atom's state, we calculate the change in energy, <code class="font-mono text-sm">ΔE</code>. If the energy decreases (<code class="font-mono text-sm">ΔE &lt; 0</code>), the new state is energetically favorable and accepted immediately.
+                    </p>
+<p class="text-pencil-gray leading-relaxed">
+                        However, if the energy increases, we don't immediately reject it. To avoid getting stuck in local minima, we accept the change with a probability defined by the Boltzmann factor:
+                    </p>
+<!-- Equation Pill -->
+<div class="flex justify-center my-6">
+<div class="bg-primary/10 border border-primary/20 rounded-full px-8 py-4 shadow-sm backdrop-blur-sm">
+<code class="font-mono text-lg md:text-xl text-ink-black font-medium">
+                                P(accept) = exp( -ΔE / (k<sub>B</sub>T) )
+                            </code>
+</div>
+</div>
+<p class="text-pencil-gray leading-relaxed">
+                        Where <code class="font-mono text-sm">T</code> is temperature and <code class="font-mono text-sm">k<sub>B</sub></code> is the Boltzmann constant. This introduces "thermal noise" allowing the system to climb out of energy valleys.
+                    </p>
+</section>
+<!-- Divider -->
+<div class="h-6 w-full wavy-divider my-4 opacity-60"></div>
+<!-- Interactive Simulation Canvas (Polaroid Style) -->
+<section class="flex flex-col gap-6 mt-4">
+<div class="flex items-center justify-between">
+<h2 class="font-serif text-2xl font-semibold text-ink-black">Interactive Sandbox</h2>
+<span class="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded-full">v.1.0.4-beta</span>
+</div>
+<div class="bg-white p-3 pb-8 rounded-none shadow-xl transform rotate-1 transition-transform hover:rotate-0 duration-500 border border-gray-100 max-w-[600px] mx-auto w-full">
+<!-- Canvas Area -->
+<div class="aspect-square w-full bg-stone-900 relative overflow-hidden group">
+<!-- Background Grid Effect representing simulation -->
+<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#eba352 1px, transparent 1px); background-size: 20px 20px;"></div>
+<!-- Abstract Simulation Visual -->
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-3/4 h-3/4 grid grid-cols-10 grid-rows-10 gap-1">
+<!-- Generating some random 'atoms' -->
+<div class="bg-primary/80 rounded-sm"></div> <div class="bg-gray-700 rounded-sm"></div> <div class="bg-primary/40 rounded-sm"></div>
+<div class="bg-primary/60 rounded-sm"></div> <div class="bg-gray-600 rounded-sm"></div> <div class="bg-primary/90 rounded-sm"></div>
+<div class="bg-gray-700 rounded-sm"></div> <div class="bg-primary/50 rounded-sm"></div> <div class="bg-gray-600 rounded-sm"></div>
+<div class="bg-primary/70 rounded-sm"></div> <div class="bg-gray-700 rounded-sm"></div> <div class="bg-primary/30 rounded-sm"></div>
+<div class="bg-gray-600 rounded-sm"></div> <div class="bg-primary/80 rounded-sm"></div> <div class="bg-gray-700 rounded-sm"></div>
+<div class="bg-primary/80 rounded-sm col-span-2 row-span-2 animate-pulse"></div>
+<div class="col-start-4 row-start-4 bg-white/10 rounded-full w-full h-full animate-ping"></div>
+<!-- more implicit dots via background -->
+</div>
+</div>
+<!-- Overlay Controls -->
+<div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+<div class="text-xs font-mono text-primary">
+                                    T = 300K<br/>
+                                    Steps: 1042
+                                </div>
+<button class="bg-primary hover:bg-orange-500 text-ink-black rounded-full p-3 shadow-lg transition-transform active:scale-95">
+<span class="material-symbols-outlined block">play_arrow</span>
+</button>
+</div>
+<img alt="Simulation Canvas Placeholder" class="absolute inset-0 w-full h-full object-cover opacity-0 pointer-events-none" data-alt="Abstract representation of atomic lattice grid with some cells highlighted in amber" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4b9_Gc-Bw-iYDEXLhK0Bp18deErDdc8JCjNd1f2UYLufXmvbBOkpMyJ9I5LXGCCn9gQsZzQYbNbuslI9yNoTC316yxbRta2k6HrKoeIWNSCKWWeOPa4MvCpX3wxxVmShbk_C2x5PIksgGYgBecVjmUt_D2bUSGQJp6AGB94A2hO_16KIBtIXrteCpIbqagXwjMzovRJ7xOppvstmn5oU6NYfM6RAix9aRytZGqR03YQHOV8xhMtmO-pufu44abC7SPNDJd6K-"/>
+</div>
+<!-- Caption -->
+<div class="mt-4 px-2 font-handwriting text-center text-pencil-gray font-serif italic">
+                            Figure 4: Real-time evolution of 50x50 lattice
+                        </div>
+</div>
+</section>
+<!-- Footer for content -->
+<div class="mt-12 pt-8 border-t border-gray-200 text-center text-secondary-gray text-sm">
+<p>End of Guide • Next: <a class="text-primary hover:underline" href="#">Analysis of Results</a></p>
+</div>
+</article>
+<!-- Right Margin (Doodles) -->
+<div class="hidden xl:flex flex-col items-start pt-96 pl-4 opacity-60">
+<div class="sticky top-64 flex flex-col gap-2 items-center">
+<!-- Random Walk Doodle -->
+<svg class="text-pencil-gray" fill="none" height="150" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewbox="0 0 100 150" width="100">
+<path d="M50 140 L55 130 L45 125 L60 115 L50 100 L70 90 L60 80 L65 70 L40 60 L50 40 L30 30 L50 10"></path>
+<circle cx="50" cy="140" fill="currentColor" r="2"></circle>
+<circle class="text-primary" cx="50" cy="10" fill="currentColor" r="2"></circle>
+<path d="M55 8 L65 2 M45 8 L35 2 M50 5 L50 -2" stroke="#eba352"></path>
+</svg>
+<span class="text-xs font-serif italic text-secondary-gray rotate-6 transform mt-2 max-w-[100px] text-center">
+                        Random walk pathfinding
+                    </span>
+</div>
+</div>
+</div>
+</main>
+</body></html>
