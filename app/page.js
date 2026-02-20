@@ -30,7 +30,7 @@ export default function HomePage() {
         <h1>
           <span className="highlighter-underline">Kinetics of Materials</span>
         </h1>
-        <p className="subtitle">Weekly Assignments · Spring 2026</p>
+        <p className="subtitle">Ahmet&rsquo;s Weekly Assignments · Spring 2026</p>
       </section>
 
       {/* Assignment Grid */}

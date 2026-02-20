@@ -102,7 +102,7 @@ export default function RootLayout({ children }) {
               <a href="/" style={{ textDecoration: "none" }}>
                 <div className="site-logo">
                   <div className="site-logo-icon">⚛️</div>
-                  <span className="site-logo-text">MAT206</span>
+                  <span className="site-logo-text">Ahmet&rsquo;s MAT206 Notebook</span>
                 </div>
               </a>
               <nav className="site-nav">
@@ -118,7 +118,7 @@ export default function RootLayout({ children }) {
 
           {/* Footer */}
           <footer className="site-footer">
-            MAT206 — Kinetics of Materials · Spring 2026
+            MAT206 — Kinetics of Materials · Spring 2026 · Ahmet Ekiz
           </footer>
         </div>
       </body>
