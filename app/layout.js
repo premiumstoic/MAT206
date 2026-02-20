@@ -101,7 +101,7 @@ export default function RootLayout({ children }) {
             <div className="site-header-inner">
               <a href="/" style={{ textDecoration: "none" }}>
                 <div className="site-logo">
-                  <div className="site-logo-icon">⚛️</div>
+                  <img src="/images/logo.png" alt="MAT206 Logo" className="site-logo-icon" style={{ objectFit: "cover" }} />
                   <span className="site-logo-text">Ahmet&rsquo;s MAT206 Notebook</span>
                 </div>
               </a>
