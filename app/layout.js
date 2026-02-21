@@ -1,4 +1,5 @@
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata = {
   title: "MAT206 — Kinetics of Materials",
@@ -121,6 +122,7 @@ export default function RootLayout({ children }) {
             MAT206 — Kinetics of Materials · Spring 2026 · Ahmet Ekiz
           </footer>
         </div>
+        <Analytics />
       </body>
     </html>
   );
