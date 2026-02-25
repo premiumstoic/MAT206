@@ -173,6 +173,101 @@ export default function Recit1Page() {
 
             <div className="wavy-divider" />
 
+            {/* Exploration Questions */}
+            <section>
+                <h2 className="explore-section-title">🔬 Exploration Questions</h2>
+                <p className="explore-subtitle">
+                    Use the interactive sandbox above to investigate these questions. Adjust the parameters, observe, and reason about the physics.
+                </p>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+
+                    {/* Q1 */}
+                    <div className="question-card">
+                        <span className="q-badge">Question 1</span>
+                        <p className="q-text">What happens when you push the A-A energy to very negative or very positive values?</p>
+                        <div className="q-answer">
+                            <p>
+                                <strong>Very negative energy</strong> (e.g. −200): The interaction between neighboring atoms becomes strongly attractive. The Boltzmann criterion heavily favors moves that <em>increase</em> the number of filled neighbors, so atoms rapidly cluster into a single compact island. The system acts as if it is deeply below the freezing point — any atom that wanders away from the cluster is immediately pulled back.
+                            </p>
+                            <p style={{ marginTop: "0.75rem" }}>
+                                <strong>Very positive energy</strong> (e.g. +200): The interaction becomes repulsive. Now the system penalizes atoms for being close to each other. Atoms spread out as far apart as possible, producing a checkerboard-like or maximally dispersed arrangement — similar to an anti-ferromagnetic ordering in the Ising model.
+                            </p>
+                        </div>
+                        <div className="q-tip">Try setting the energy to −200 and then to +200 at T&nbsp;=&nbsp;100. Watch how the grid evolves in each case.</div>
+                    </div>
+
+                    {/* Q2 */}
+                    <div className="question-card">
+                        <span className="q-badge">Question 2</span>
+                        <p className="q-text">Change the time step and the temperature. How fast does the system reach equilibrium? Where do you see the change the most?</p>
+                        <div className="q-answer">
+                            <p>
+                                <strong>Time step</strong> controls the wall-clock speed of the simulation but does <em>not</em> change the physics. A shorter time step (e.g. 1 ms) makes the grid update faster on screen, while a longer step (e.g. 100 ms) lets you watch individual swaps in slow motion.
+                            </p>
+                            <p style={{ marginTop: "0.75rem" }}>
+                                <strong>Temperature</strong> directly affects how quickly the system reaches equilibrium. At <strong>high T</strong> the Boltzmann probability becomes nearly 0.5 for every swap, so atoms move freely and equilibrium is reached quickly — but equilibrium itself is a disordered, well-mixed state. At <strong>low T</strong>, only energetically favorable moves are accepted, so the system evolves slowly but eventually forms tightly clustered structures.
+                            </p>
+                            <p style={{ marginTop: "0.75rem" }}>
+                                The most visible changes occur at <strong>the boundary between clusters and empty space</strong>. This is where atoms are actively being captured or released — the interface is the most dynamic part of the system.
+                            </p>
+                        </div>
+                        <div className="q-tip">Try T&nbsp;=&nbsp;10 vs T&nbsp;=&nbsp;500 with the same starting grid. Notice the cluster edges (interface) showing the most activity.</div>
+                    </div>
+
+                    {/* Q3 */}
+                    <div className="question-card">
+                        <span className="q-badge">Question 3</span>
+                        <p className="q-text">Fill most of the cells, or try a grid that is barely filled. How does the initial density affect equilibrium?</p>
+                        <div className="q-answer">
+                            <p>
+                                <strong>High fill density</strong> (e.g. 700 out of 900): There are very few vacancies to move into. The system is already close to a fully ordered state, so it reaches equilibrium almost instantly — there simply isn&apos;t room for large-scale rearrangement. You&apos;ll see only minor fluctuations at the surface of vacancies.
+                            </p>
+                            <p style={{ marginTop: "0.75rem" }}>
+                                <strong>Low fill density</strong> (e.g. 30 out of 900): Atoms are sparse and widely scattered. At low temperature, they slowly find each other and form small clusters that gradually merge into a single island. At high temperature, they remain randomly scattered. The journey to equilibrium is much longer because atoms must diffuse across large empty regions to find neighbors.
+                            </p>
+                        </div>
+                        <div className="q-tip">Try 800 filled cells vs 30 filled cells on a 30×30 grid. Watch the difference in how fast structure emerges.</div>
+                    </div>
+
+                    {/* Q4 */}
+                    <div className="question-card">
+                        <span className="q-badge">Question 4</span>
+                        <p className="q-text">Think of this simulation as a melting/freezing or boiling/condensation process. Do you still see changes at equilibrium?</p>
+                        <div className="q-answer">
+                            <p>
+                                <strong>Yes — equilibrium is dynamic, not static.</strong> Even after the macroscopic state looks stable (clusters have formed, the overall pattern doesn&apos;t change), individual atoms continue to swap. Atoms at cluster edges occasionally detach and reattach; vacancies move through the interior. The <em>rate of attachment equals the rate of detachment</em>, so the overall shape doesn&apos;t change, but the microscopic picture is always in motion.
+                            </p>
+                            <p style={{ marginTop: "0.75rem" }}>
+                                This is exactly what happens in real materials: at the melting point, the rate of solidification equals the rate of melting. A crystal sitting in its own melt appears stable, but at the atomic scale the interface is constantly exchanging atoms with the liquid.
+                            </p>
+                        </div>
+                        <div className="q-tip">Let the simulation run for a long time at low T. The cluster shape stabilizes, but watch the edges — atoms keep flickering on and off.</div>
+                    </div>
+
+                    {/* Q5 */}
+                    <div className="question-card">
+                        <span className="q-badge">Question 5</span>
+                        <p className="q-text">In the equation we did not add an entropy term, but the simulation reaches equilibrium. Where is the entropy?</p>
+                        <div className="q-answer">
+                            <p>
+                                The entropy is <strong>implicitly built into the random number generator</strong>. Every Monte Carlo step, we draw a random number and compare it to the Boltzmann probability <code>p</code>. This random sampling is mathematically equivalent to exploring all possible microstates with their correct statistical weights.
+                            </p>
+                            <p style={{ marginTop: "0.75rem" }}>
+                                Temperature controls how many &ldquo;unlikely&rdquo; (high-energy) microstates become accessible. At <strong>low T</strong>, only energy-lowering moves are accepted — entropy is suppressed and order dominates (like a frozen crystal). At <strong>high T</strong>, almost every move is accepted regardless of energy cost — entropy wins and the system becomes disordered (like a gas).
+                            </p>
+                            <p style={{ marginTop: "0.75rem" }}>
+                                In formal terms, the Boltzmann factor <code>exp(ΔE / T)</code> already encodes the free energy balance <code>F = E − TS</code>. The &ldquo;many random trials&rdquo; collectively represent the entropic multiplicity of states. We don&apos;t need an explicit entropy term because the <em>stochastic process itself is the entropy</em>.
+                            </p>
+                        </div>
+                        <div className="q-tip">This is the deep insight of statistical mechanics: entropy is not a force — it is a consequence of counting accessible microstates.</div>
+                    </div>
+
+                </div>
+            </section>
+
+            <div className="wavy-divider" />
+
             {/* Code Explanation - Part 1 */}
             <section className="step-block">
                 <div className="step-header">
