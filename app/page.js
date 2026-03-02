@@ -11,6 +11,16 @@ const assignments = [
     featured: true,
     image: "/images/monte_carlo_card.png",
   },
+  {
+    week: 2,
+    slug: "recit2",
+    title: "Grand Canonical MC",
+    description:
+      "Model gas-liquid phase transitions using the Grand Canonical Ensemble with chemical potential and particle exchange.",
+    status: "active",
+    featured: true,
+    image: "/images/grand_canonical_card.png",
+  },
 ];
 
 function StatusBadge({ status }) {
@@ -78,7 +88,7 @@ export default function HomePage() {
         ))}
 
         {/* Placeholder for future weeks */}
-        {[2, 3, 4].map((week) => (
+        {[3, 4].map((week) => (
           <article
             key={week}
             className="assignment-card"
