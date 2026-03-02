@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 2: Grand Canonical MC Simulation — MAT206</title>
+    <meta name="description"
+        content="Build an open-system Monte Carlo simulation using the Grand Canonical Ensemble to model gas-liquid phase transitions." />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+
+    <style>
+        /* =========================================
+           Digital Humanism — Design System
+           MAT206 Kinetics of Materials
+           ========================================= */
+        :root {
+            --color-cream: #FDFBF7;
+            --color-charcoal: #2C303A;
+            --color-amber: #EBA352;
+            --color-amber-light: rgba(235, 163, 82, 0.12);
+            --color-cyan: #4A90E2;
+            --color-pencil: #E1E2E6;
+            --color-card: #FFFFFF;
+            --color-secondary: #887763;
+            --font-serif: 'Lora', Georgia, serif;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'Fira Code', 'Courier New', monospace;
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            --space-2xl: 3rem;
+            --space-3xl: 4rem;
+            --radius-sm: 0.5rem;
+            --radius-md: 1rem;
+            --radius-lg: 2rem;
+            --radius-pill: 9999px;
+            --shadow-card: 2px 4px 12px -2px rgba(44, 48, 58, 0.08);
+            --shadow-card-hover: 4px 8px 20px -4px rgba(44, 48, 58, 0.14);
+            --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --transition-smooth: 0.3s ease-in-out;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            color: var(--color-charcoal);
+            background-color: var(--color-cream);
+            background-image: radial-gradient(rgba(136, 119, 99, 0.06) 1px, transparent 1px);
+            background-size: 24px 24px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        a {
+            color: var(--color-cyan);
+            text-decoration: none;
+        }
+
+        /* Header */
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(253, 251, 247, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--color-pencil);
+        }
+
+        .site-header-inner {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1.5rem;
+        }
+
+        .site-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .site-logo-text {
+            font-family: var(--font-serif);
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--color-charcoal);
+        }
+
+        .site-nav a {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--color-secondary);
+            border-bottom: 2px solid var(--color-amber);
+            padding-bottom: 2px;
+        }
+
+        /* Reading column */
+        .reading-column {
+            max-width: 740px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 4rem;
+        }
+
+        /* Title block */
+        .journal-title-block {
+            text-align: center;
+            margin-bottom: var(--space-2xl);
+        }
+
+        .assignment-label {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            background: var(--color-amber-light);
+            color: var(--color-amber);
+            font-weight: 700;
+            padding: 4px 14px;
+            border-radius: var(--radius-pill);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: var(--space-md);
+        }
+
+        .journal-title-block h1 {
+            font-family: var(--font-serif);
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            color: var(--color-charcoal);
+            margin-bottom: var(--space-sm);
+        }
+
+        .tagline {
+            color: var(--color-secondary);
+            font-size: 1.05rem;
+            font-style: italic;
+            margin-top: var(--space-sm);
+        }
+
+        /* Context callout */
+        .context-callout {
+            background: var(--color-card);
+            border-radius: var(--radius-md);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-card);
+            border-left: 4px solid var(--color-amber);
+            margin-bottom: var(--space-2xl);
+        }
+
+        .context-callout h3 {
+            font-family: var(--font-serif);
+            font-size: 1.1rem;
+            margin-bottom: var(--space-sm);
+            color: var(--color-amber);
+        }
+
+        .context-callout p {
+            color: var(--color-secondary);
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        /* Divider */
+        .wavy-divider {
+            width: 100%;
+            height: 20px;
+            margin: var(--space-2xl) 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 20'%3E%3Cpath d='M0 10 Q 15 0 30 10 T 60 10 T 90 10 T 120 10 T 150 10 T 180 10 T 210 10 T 240 10 T 270 10 T 300 10 T 330 10 T 360 10 T 390 10 T 420 10 T 450 10 T 480 10 T 510 10 T 540 10 T 570 10 T 600 10' fill='none' stroke='%23E1E2E6' stroke-width='1.5'/%3E%3C/svg%3E");
+            background-repeat: repeat-x;
+            background-size: 600px 20px;
+        }
+
+        /* Step blocks */
+        .step-block {
+            margin-bottom: var(--space-md);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: baseline;
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+        }
+
+        .step-number {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--color-amber);
+            background: var(--color-amber-light);
+            padding: 4px 12px;
+            border-radius: var(--radius-pill);
+            flex-shrink: 0;
+        }
+
+        .step-header h2 {
+            font-family: var(--font-serif);
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--color-charcoal);
+        }
+
+        .step-content {
+            color: var(--color-secondary);
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        .step-content p {
+            margin-bottom: 0;
+        }
+
+        .step-content ul,
+        .step-content ol {
+            padding-left: 1.5rem;
+            line-height: 2;
+        }
+
+        .step-content ul li,
+        .step-content ol li {
+            margin-bottom: 0.25rem;
+        }
+
+        .step-content strong {
+            color: var(--color-charcoal);
+        }
+
+        .step-content em {
+            color: var(--color-charcoal);
+            font-style: italic;
+        }
+
+        .step-content code {
+            font-family: var(--font-mono);
+            font-size: 0.85em;
+            background: var(--color-amber-light);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Equation pill */
+        .equation-pill {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            background: var(--color-card);
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-card);
+            color: var(--color-charcoal);
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        /* Controls */
+        .controls-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+            background: white;
+            padding: 1.25rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .control-label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--color-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .control-label input {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            padding: 6px 8px;
+            border: 1px solid var(--color-pencil);
+            border-radius: 6px;
+            background: var(--color-cream);
+            color: var(--color-charcoal);
+        }
+
+        .control-label input[type="color"] {
+            padding: 2px;
+            height: 36px;
+            cursor: pointer;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 24px;
+            border-radius: var(--radius-pill);
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-smooth);
+        }
+
+        .btn-primary {
+            background: var(--color-amber);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #d48e3e;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        /* Polaroid */
+        .polaroid {
+            background: white;
+            padding: 12px 12px 16px;
+            border-radius: 4px;
+            box-shadow: var(--shadow-card);
+            max-width: 580px;
+            margin: 0 auto;
+        }
+
+        .polaroid-caption {
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--color-secondary);
+            margin-top: 10px;
+            letter-spacing: 0.02em;
+        }
+
+        /* Exploration Questions */
+        .explore-section-title {
+            font-family: var(--font-serif);
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--color-charcoal);
+            text-align: center;
+            margin-bottom: var(--space-lg);
+        }
+
+        .explore-subtitle {
+            text-align: center;
+            color: var(--color-secondary);
+            font-size: 0.95rem;
+            margin-bottom: var(--space-2xl);
+            max-width: 540px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .question-card {
+            background: var(--color-card);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-card);
+            padding: var(--space-lg) var(--space-xl);
+            transition: box-shadow var(--transition-smooth), transform var(--transition-smooth);
+        }
+
+        .question-card:hover {
+            box-shadow: var(--shadow-card-hover);
+            transform: translateY(-2px);
+        }
+
+        .question-card .q-badge {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            background: var(--color-amber-light);
+            color: var(--color-amber);
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: var(--radius-pill);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .question-card .q-text {
+            font-family: var(--font-serif);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--color-charcoal);
+            margin: var(--space-sm) 0 var(--space-md);
+        }
+
+        .question-card .q-answer {
+            color: var(--color-secondary);
+            font-size: 0.92rem;
+            line-height: 1.8;
+        }
+
+        .question-card .q-answer strong {
+            color: var(--color-charcoal);
+        }
+
+        .question-card .q-tip {
+            margin-top: var(--space-md);
+            padding: var(--space-sm) var(--space-md);
+            background: var(--color-amber-light);
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            color: var(--color-charcoal);
+        }
+
+        .question-card .q-tip::before {
+            content: '💡 ';
+        }
+
+        /* Code blocks */
+        .code-block {
+            background: #011627;
+            color: #d6deeb;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            padding: 1.25rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-top: 1rem;
+            line-height: 1.6;
+            white-space: pre;
+            tab-size: 4;
+        }
+
+        .code-keyword {
+            color: #c792ea;
+        }
+
+        .code-function {
+            color: #82aaff;
+        }
+
+        .code-string {
+            color: #addb67;
+        }
+
+        .code-number {
+            color: #f78c6c;
+        }
+
+        .code-comment {
+            color: #637777;
+            font-style: italic;
+        }
+
+        .code-operator {
+            color: #89ddff;
+        }
+
+        /* Footer */
+        .site-footer {
+            text-align: center;
+            padding: var(--space-xl);
+            color: var(--color-secondary);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--color-pencil);
+            margin-top: var(--space-3xl);
+        }
+
+        @media (max-width: 768px) {
+            .journal-title-block h1 {
+                font-size: 2rem;
+            }
+
+            .controls-panel {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="site-header">
+        <div class="site-header-inner">
+            <a href="/" style="text-decoration:none">
+                <div class="site-logo">
+                    <span style="font-size:1.2rem">⚛️</span>
+                    <span class="site-logo-text">MAT206</span>
+                </div>
+            </a>
+            <nav class="site-nav">
+                <a href="/">Assignments</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="reading-column">
+
+        <!-- Title Block -->
+        <div class="journal-title-block">
+            <span class="assignment-label">Assignment 02</span>
+            <h1>Grand Canonical<br>Monte Carlo Simulation</h1>
+            <p class="tagline">An open system exchanging particles with a reservoir.</p>
+        </div>
+
+        <!-- Context -->
+        <div class="context-callout">
+            <h3>Context</h3>
+            <p>
+                This simulation models a region near the triple point in a P-T phase diagram using the
+                <strong>Grand Canonical Ensemble</strong>. Unlike the canonical (NVT) ensemble from Week 1 where
+                particle count is fixed, the grand canonical ensemble allows the system to exchange particles with
+                an external reservoir. The flow of particles is governed by the <strong>chemical potential (μ)</strong>,
+                which acts as the thermodynamic "pressure dial" of the reservoir.
+            </p>
+        </div>
+
+        <div class="wavy-divider"></div>
+
+        <!-- Step 01 — System & Parameters -->
+        <section class="step-block">
+            <div class="step-header">
+                <span class="step-number">01</span>
+                <h2>System Representation &amp; Parameters</h2>
+            </div>
+            <div class="step-content">
+                <p>
+                    The physical system is a 2D grid. Each cell is either <strong>filled</strong> (atom present, s = 1)
+                    or
+                    <strong>empty</strong> (vacancy, s = 0). This time the system is <em>open</em> — atoms can appear or
+                    disappear at any cell, representing exchange with a particle reservoir.
+                </p>
+                <p style="margin-top:1rem">The key parameters are:</p>
+                <ul style="margin-top:0.5rem">
+                    <li><strong>Chemical Potential (μ)</strong> — Controls particle flow. High μ pumps atoms in (high
+                        pressure → liquid). Low/negative μ sucks atoms out (low pressure → gas).</li>
+                    <li><strong>Interaction Energy (ε)</strong> — The bond strength between nearest-neighbor filled
+                        cells. Negative values mean attractive bonds.</li>
+                    <li><strong>Temperature (T)</strong> — Scales the statistical weight of state changes. (k_B = 1).
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <div class="wavy-divider"></div>
+
+        <!-- Step 02 — Grand Potential -->
+        <section class="step-block">
+            <div class="step-header">
+                <span class="step-number">02</span>
+                <h2>The Grand Potential</h2>
+            </div>
+            <div class="step-content">
+                <p>
+                    In the grand canonical ensemble, the relevant thermodynamic potential is the
+                    <strong>grand potential (Ω)</strong>. For a single cell with state <code>s</code> (0 or 1):
+                </p>
+                <div style="display:flex;justify-content:center;margin:1.5rem 0">
+                    <span class="equation-pill">Ω = n_f · ε · s − μ · s</span>
+                </div>
+                <p>
+                    Where <code>n_f</code> is the number of filled nearest neighbors (up, down, left, right — max 4),
+                    <code>ε</code> is the interaction energy, <code>s</code> is the cell state, and <code>μ</code>
+                    is the chemical potential.
+                </p>
+                <p style="margin-top:1rem">
+                    When a cell is empty (s = 0), Ω = 0 regardless of neighbors. The grand potential only
+                    contributes when a cell is occupied, coupling both the local bonding environment and
+                    the reservoir pressure.
+                </p>
+            </div>
+        </section>
+
+        <div class="wavy-divider"></div>
+
+        <!-- Step 03 — The MC Step -->
+        <section class="step-block">
+            <div class="step-header">
+                <span class="step-number">03</span>
+                <h2>The Monte Carlo Step</h2>
+            </div>
+            <div class="step-content">
+                <p>
+                    Unlike Week 1 where we pick <em>two</em> cells and attempt a swap, here we pick
+                    <strong>one random cell</strong> and propose to <em>toggle</em> its state (fill → empty or empty →
+                    fill).
+                </p>
+                <p style="margin-top:1rem"><strong>The algorithm for each step:</strong></p>
+                <ol style="margin-top:0.5rem">
+                    <li>Pick a random cell at position (r, c).</li>
+                    <li>Count its filled neighbors n_f.</li>
+                    <li>Calculate Ω_current for the cell's present state.</li>
+                    <li>Calculate Ω_proposed for the toggled state.</li>
+                    <li>Compute the weight: <code>q = exp((Ω_current − Ω_proposed) / T)</code></li>
+                    <li>Compute the probability: <code>p = q / (1 + q)</code></li>
+                    <li>Draw a random number. If ≤ p, toggle the cell.</li>
+                </ol>
+            </div>
+        </section>
+
+        <div class="wavy-divider"></div>
+
+        <!-- Step 04 — Phase Transitions -->
+        <section class="step-block">
+            <div class="step-header">
+                <span class="step-number">04</span>
+                <h2>Phase Transitions: Gas ↔ Liquid</h2>
+            </div>
+            <div class="step-content">
+                <p>
+                    The chemical potential μ acts as the "pressure knob" of the reservoir. By tuning μ,
+                    you can drive macroscopic phase transitions:
+                </p>
+                <ul style="margin-top:0.75rem">
+                    <li><strong>High μ (positive)</strong> — Reservoir pushes atoms into the system. The grid fills up →
+                        <strong>liquid phase</strong>.</li>
+                    <li><strong>Low μ (very negative)</strong> — Reservoir pulls atoms out. The grid empties →
+                        <strong>gas phase</strong>.</li>
+                    <li><strong>Critical μ</strong> — At the right balance between μ, ε, and T, both phases coexist.
+                        Droplets nucleate and dissolve.</li>
+                </ul>
+                <p style="margin-top:1rem">
+                    A <strong>completely empty grid = gas phase</strong> and a <strong>completely filled grid = liquid
+                        phase</strong>.
+                </p>
+            </div>
+        </section>
+
+        <div class="wavy-divider"></div>
+
+        <!-- Step 05 — Scientific Observations -->
+        <section class="step-block">
+            <div class="step-header">
+                <span class="step-number">05</span>
+                <h2>Scientific Observations</h2>
+            </div>
+            <div class="step-content">
+                <p>
+                    <strong>Nucleation &amp; Growth:</strong> When μ is near the critical value, small clusters
+                    (nuclei) form and dissolve. Occasionally, a nucleus grows large enough to become thermodynamically
+                    stable and triggers a full phase transition — this is <em>nucleation</em>.
+                </p>
+                <p style="margin-top:1rem">
+                    <strong>Hysteresis:</strong> Slowly ramping μ up and then back down, the system doesn't reverse
+                    at the same μ value. This asymmetry is a signature of a first-order phase transition.
+                </p>
+                <p style="margin-top:1rem">
+                    <strong>Surface Tension:</strong> At low temperature with a large droplet, the interface between
+                    filled and empty regions is sharp and roughly circular — minimizing surface area. This is surface
+                    tension arising naturally from the ε interaction.
+                </p>
+            </div>
+        </section>
+
+        <div class="wavy-divider"></div>
+
+        <!-- Interactive Sandbox -->
+        <section class="step-block">
+            <div class="step-header">
+                <h2 style="font-family:var(--font-serif)">Interactive Sandbox</h2>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls-panel" id="controls">
+                <label class="control-label">Width (n) <input type="number" id="inp-n" value="50" min="2"
+                        max="100"></label>
+                <label class="control-label">Height (m) <input type="number" id="inp-m" value="50" min="2"
+                        max="100"></label>
+                <label class="control-label">Initial Filled <input type="number" id="inp-filled" value="0"
+                        min="0"></label>
+                <label class="control-label">Time Step (ms) <input type="number" id="inp-timeStep" value="1" min="1"
+                        max="1000"></label>
+                <label class="control-label">Chem. Pot. (μ) <input type="number" id="inp-mu" value="-100"></label>
+                <label class="control-label">Interact. (ε) <input type="number" id="inp-eps" value="-50"></label>
+                <label class="control-label">Temperature <input type="number" id="inp-temp" value="100" min="1"></label>
+                <label class="control-label">Filled Color <input type="color" id="inp-filledColor"
+                        value="#4A90E2"></label>
+                <label class="control-label">Empty Color <input type="color" id="inp-emptyColor"
+                        value="#FDFBF7"></label>
+            </div>
+
+            <!-- Buttons -->
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1.5rem">
+                <button class="btn btn-primary" id="btn-regenerate">🔄 Regenerate</button>
+                <button class="btn btn-primary" id="btn-toggle">▶ Start</button>
+            </div>
+
+            <!-- Canvas -->
+            <div class="polaroid" style="margin-top:1.5rem">
+                <div
+                    style="aspect-ratio:1;width:100%;position:relative;overflow:hidden;background:#f5f3ef;border-radius:2px">
+                    <canvas id="sim-canvas" style="width:100%;height:100%;cursor:crosshair"></canvas>
+                </div>
+                <div class="polaroid-caption" id="caption">
+                    Filled: <strong>0</strong> / 2500 · Steps: <strong>0</strong> · T = 100K · μ = -100
+                </div>
+            </div>
+        </section>
+
+        <div class="wavy-divider"></div>
+
+        <!-- Exploration Questions -->
+        <section>
+            <h2 class="explore-section-title">🔬 Exploration Questions</h2>
+            <p class="explore-subtitle">
+                Use the interactive sandbox above to investigate these questions. Adjust the parameters, observe, and
+                reason about the physics.
+            </p>
+            <div style="display:flex;flex-direction:column;gap:1.5rem">
+
+                <div class="question-card">
+                    <span class="q-badge">Question 1</span>
+                    <p class="q-text">What happens when you increase the chemical potential (μ) from very negative to
+                        very positive?</p>
+                    <div class="q-answer">
+                        <p><strong>Very negative μ</strong> (e.g. −300): The reservoir strongly favors removing atoms.
+                            The grid rapidly approaches a <strong>gas phase</strong> — nearly completely empty.</p>
+                        <p style="margin-top:0.75rem"><strong>Very positive μ</strong> (e.g. +100): The reservoir pushes
+                            atoms into every available cell. The grid converges to a <strong>liquid phase</strong> —
+                            nearly completely full.</p>
+                        <p style="margin-top:0.75rem">At intermediate μ values (near the critical point), you'll see
+                            dynamic coexistence — droplets forming, dissolving, and reforming.</p>
+                    </div>
+                    <div class="q-tip">Try μ = −300, then μ = +100, then μ = −100 at T = 100, ε = −50.</div>
+                </div>
+
+                <div class="question-card">
+                    <span class="q-badge">Question 2</span>
+                    <p class="q-text">How does the interaction energy (ε) affect the sharpness of the phase transition?
+                    </p>
+                    <div class="q-answer">
+                        <p><strong>Strongly negative ε</strong> (e.g. −100): Bonds are very strong. The transition
+                            between gas and liquid is abrupt — a <strong>first-order phase transition</strong>.</p>
+                        <p style="margin-top:0.75rem"><strong>Weakly negative ε</strong> (e.g. −10): Bonds are weak, so
+                            the transition is gradual. At very small |ε|/T, the system behaves almost independently per
+                            cell.</p>
+                    </div>
+                    <div class="q-tip">Compare ε = −100 vs ε = −10 at the same T and μ. Notice the cluster edges.</div>
+                </div>
+
+                <div class="question-card">
+                    <span class="q-badge">Question 3</span>
+                    <p class="q-text">Start with an empty grid and slowly increase μ. Then slowly decrease it back. Do
+                        you see the same transition point?</p>
+                    <div class="q-answer">
+                        <p><strong>No — this is hysteresis.</strong> When increasing μ, the system may remain in the gas
+                            phase past the equilibrium transition point because forming the first nucleus requires
+                            overcoming an energy barrier.</p>
+                        <p style="margin-top:0.75rem">Going back, the filled state persists to lower μ values. The
+                            forward and backward transition points differ — a signature of a <strong>first-order phase
+                                transition</strong> with <strong>metastable states</strong>.</p>
+                    </div>
+                    <div class="q-tip">Try this with ε = −50, T = 50. Slowly ramp μ from −200 to 0 and back.</div>
+                </div>
+
+                <div class="question-card">
+                    <span class="q-badge">Question 4</span>
+                    <p class="q-text">How does this Grand Canonical simulation differ from the Week 1 Canonical
+                        simulation?</p>
+                    <div class="q-answer">
+                        <p><strong>Canonical (Week 1):</strong> Fixed particle count. Two cells swapped. Models a closed
+                            system — studies diffusion at constant composition.</p>
+                        <p style="margin-top:0.75rem"><strong>Grand Canonical (Week 2):</strong> Variable particle
+                            count. One cell toggled. Models an open system — studies phase transitions (gas ↔ liquid)
+                            controlled by external pressure (μ).</p>
+                    </div>
+                    <div class="q-tip">Run both simulations side by side (open recit1 in another tab) to compare their
+                        behavior.</div>
+                </div>
+
+                <div class="question-card">
+                    <span class="q-badge">Question 5</span>
+                    <p class="q-text">At low temperature with a stable droplet, observe the interface. What do you
+                        notice about its shape?</p>
+                    <div class="q-answer">
+                        <p>At low T, the droplet develops a <strong>roughly circular interface</strong>. This is
+                            <strong>surface tension</strong> in action — the system minimizes interface length because
+                            every exposed surface atom costs energy. A circle minimizes perimeter for a given area.</p>
+                        <p style="margin-top:0.75rem">At high T, the interface becomes rough and fractal-like — the
+                            <strong>roughening transition</strong>.</p>
+                    </div>
+                    <div class="q-tip">Set T = 20, ε = −50, μ = −100, fill half the grid, and watch the droplet shape
+                        evolve.</div>
+                </div>
+
+            </div>
+        </section>
+
+        <div class="wavy-divider"></div>
+
+        <!-- Code Explanation - Part 1 -->
+        <section class="step-block">
+            <div class="step-header">
+                <span class="step-number">06</span>
+                <h2>Under the Hood: State &amp; Grid</h2>
+            </div>
+            <div class="step-content">
+                <p>The simulation manages state with vanilla JavaScript. The grid is initialized and random cells are
+                    filled:</p>
+                <div class="code-block"><span class="code-comment">// ─── Grid creation ───────────────────────</span>
+                    <span class="code-keyword">function</span> <span class="code-function">createGrid</span>(n, m,
+                    filledCount) {
+                    <span class="code-keyword">const</span> grid <span class="code-operator">=</span> Array.<span
+                        class="code-function">from</span>({ length: m }, () <span class="code-operator">=&gt;</span>
+                    <span class="code-function">Array</span>(n).<span class="code-function">fill</span>(<span
+                        class="code-number">0</span>));
+                    <span class="code-keyword">let</span> placed <span class="code-operator">=</span> <span
+                        class="code-number">0</span>;
+                    <span class="code-keyword">while</span> (placed <span class="code-operator">&lt;</span> filledCount
+                    <span class="code-operator">&amp;&amp;</span> placed <span class="code-operator">&lt;</span> n <span
+                        class="code-operator">*</span> m) {
+                    <span class="code-keyword">const</span> r <span class="code-operator">=</span> Math.<span
+                        class="code-function">floor</span>(Math.<span class="code-function">random</span>() <span
+                        class="code-operator">*</span> m);
+                    <span class="code-keyword">const</span> c <span class="code-operator">=</span> Math.<span
+                        class="code-function">floor</span>(Math.<span class="code-function">random</span>() <span
+                        class="code-operator">*</span> n);
+                    <span class="code-keyword">if</span> (grid[r][c] <span class="code-operator">===</span> <span
+                        class="code-number">0</span>) { grid[r][c] <span class="code-operator">=</span> <span
+                        class="code-number">1</span>; placed<span class="code-operator">++</span>; }
+                    }
+                    <span class="code-keyword">return</span> grid;
+                    }
+                </div>
+            </div>
+        </section>
+
+        <div class="wavy-divider"></div>
+
+        <!-- Code Explanation - Part 2 -->
+        <section class="step-block">
+            <div class="step-header">
+                <span class="step-number">07</span>
+                <h2>Under the Hood: The Grand Canonical Step</h2>
+            </div>
+            <div class="step-content">
+                <p>The core difference: we pick <strong>one cell</strong> and compute the grand potential for both its
+                    current state and the toggled state:</p>
+                <div class="code-block"><span class="code-keyword">function</span> <span
+                        class="code-function">simulationStep</span>() {
+                    <span class="code-comment">// 1. Pick a random cell</span>
+                    <span class="code-keyword">const</span> r <span class="code-operator">=</span> Math.<span
+                        class="code-function">floor</span>(Math.<span class="code-function">random</span>() <span
+                        class="code-operator">*</span> rows);
+                    <span class="code-keyword">const</span> c <span class="code-operator">=</span> Math.<span
+                        class="code-function">floor</span>(Math.<span class="code-function">random</span>() <span
+                        class="code-operator">*</span> cols);
+
+                    <span class="code-comment">// 2. Count filled neighbors</span>
+                    <span class="code-keyword">const</span> n_f <span class="code-operator">=</span> <span
+                        class="code-function">countFilledNeighbors</span>(grid, r, c, rows, cols);
+
+                    <span class="code-comment">// 3. Current state</span>
+                    <span class="code-keyword">const</span> s <span class="code-operator">=</span> grid[r][c]; <span
+                        class="code-comment">// 0 or 1</span>
+
+                    <span class="code-comment">// 4. Grand potential: Ω = n_f · ε · s − μ · s</span>
+                    <span class="code-keyword">const</span> omega_current <span class="code-operator">=</span> n_f <span
+                        class="code-operator">*</span> eps <span class="code-operator">*</span> s <span
+                        class="code-operator">-</span> mu <span class="code-operator">*</span> s;
+                    <span class="code-keyword">const</span> omega_proposed <span class="code-operator">=</span> n_f
+                    <span class="code-operator">*</span> eps <span class="code-operator">*</span> (<span
+                        class="code-number">1</span><span class="code-operator">-</span>s) <span
+                        class="code-operator">-</span> mu <span class="code-operator">*</span> (<span
+                        class="code-number">1</span><span class="code-operator">-</span>s);
+
+                    <span class="code-comment">// 5. Weight & probability</span>
+                    <span class="code-keyword">const</span> q <span class="code-operator">=</span> Math.<span
+                        class="code-function">exp</span>((omega_current <span class="code-operator">-</span>
+                    omega_proposed) <span class="code-operator">/</span> T);
+                    <span class="code-keyword">const</span> p <span class="code-operator">=</span> q <span
+                        class="code-operator">/</span> (<span class="code-number">1</span> <span
+                        class="code-operator">+</span> q);
+
+                    <span class="code-comment">// 6. Accept or reject</span>
+                    <span class="code-keyword">if</span> (Math.<span class="code-function">random</span>() <span
+                        class="code-operator">&lt;=</span> p) {
+                    grid[r][c] <span class="code-operator">=</span> <span class="code-number">1</span> <span
+                        class="code-operator">-</span> s;
+                    filledCount <span class="code-operator">+=</span> (s <span class="code-operator">===</span> <span
+                        class="code-number">1</span>) <span class="code-operator">?</span> <span
+                        class="code-operator">-</span><span class="code-number">1</span> <span
+                        class="code-operator">:</span> <span class="code-number">1</span>;
+                    }
+                    }
+                </div>
+            </div>
+        </section>
+
+        <div class="wavy-divider"></div>
+
+        <!-- Code Explanation - Part 3 -->
+        <section class="step-block">
+            <div class="step-header">
+                <span class="step-number">08</span>
+                <h2>Under the Hood: Neighbor Counting</h2>
+            </div>
+            <div class="step-content">
+                <p>Energy depends on filled nearest neighbors. We use strict boundary conditions (walls):</p>
+                <div class="code-block"><span class="code-keyword">function</span> <span
+                        class="code-function">countFilledNeighbors</span>(grid, r, c, rows, cols) {
+                    <span class="code-keyword">let</span> count <span class="code-operator">=</span> <span
+                        class="code-number">0</span>;
+                    <span class="code-keyword">if</span> (r <span class="code-operator">&gt;</span> <span
+                        class="code-number">0</span> <span class="code-operator">&amp;&amp;</span> grid[r<span
+                        class="code-operator">-</span><span class="code-number">1</span>][c] <span
+                        class="code-operator">===</span> <span class="code-number">1</span>) count<span
+                        class="code-operator">++</span>;
+                    <span class="code-keyword">if</span> (r <span class="code-operator">&lt;</span> rows <span
+                        class="code-operator">-</span> <span class="code-number">1</span> <span
+                        class="code-operator">&amp;&amp;</span> grid[r<span class="code-operator">+</span><span
+                        class="code-number">1</span>][c] <span class="code-operator">===</span> <span
+                        class="code-number">1</span>) count<span class="code-operator">++</span>;
+                    <span class="code-keyword">if</span> (c <span class="code-operator">&gt;</span> <span
+                        class="code-number">0</span> <span class="code-operator">&amp;&amp;</span> grid[r][c<span
+                        class="code-operator">-</span><span class="code-number">1</span>] <span
+                        class="code-operator">===</span> <span class="code-number">1</span>) count<span
+                        class="code-operator">++</span>;
+                    <span class="code-keyword">if</span> (c <span class="code-operator">&lt;</span> cols <span
+                        class="code-operator">-</span> <span class="code-number">1</span> <span
+                        class="code-operator">&amp;&amp;</span> grid[r][c<span class="code-operator">+</span><span
+                        class="code-number">1</span>] <span class="code-operator">===</span> <span
+                        class="code-number">1</span>) count<span class="code-operator">++</span>;
+                    <span class="code-keyword">return</span> count;
+                    }
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        MAT206 — Kinetics of Materials · Spring 2026
+    </footer>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Simulation Script (Vanilla JS)
+         ═══════════════════════════════════════════════════════════ -->
+    <script>
+        (function () {
+            "use strict";
+
+            // ── DOM refs ──────────────────────────────────────────
+            const canvas = document.getElementById("sim-canvas");
+            const ctx = canvas.getContext("2d");
+            const captionEl = document.getElementById("caption");
+            const btnRegenerate = document.getElementById("btn-regenerate");
+            const btnToggle = document.getElementById("btn-toggle");
+
+            const inpN = document.getElementById("inp-n");
+            const inpM = document.getElementById("inp-m");
+            const inpFilled = document.getElementById("inp-filled");
+            const inpTimeStep = document.getElementById("inp-timeStep");
+            const inpMu = document.getElementById("inp-mu");
+            const inpEps = document.getElementById("inp-eps");
+            const inpTemp = document.getElementById("inp-temp");
+            const inpFilledColor = document.getElementById("inp-filledColor");
+            const inpEmptyColor = document.getElementById("inp-emptyColor");
+
+            // ── State ─────────────────────────────────────────────
+            let grid = null;
+            let running = false;
+            let intervalId = null;
+            let steps = 0;
+            let filledCount = 0;
+
+            // ── Helpers ───────────────────────────────────────────
+            function getN() { return Math.max(2, Number(inpN.value) || 50); }
+            function getM() { return Math.max(2, Number(inpM.value) || 50); }
+            function getFilledInit() { return Math.max(0, Number(inpFilled.value) || 0); }
+            function getTimeStep() { return Math.max(1, Number(inpTimeStep.value) || 1); }
+            function getMu() { return Number(inpMu.value) || -100; }
+            function getEps() { return Number(inpEps.value) || -50; }
+            function getTemp() { return Math.max(1, Number(inpTemp.value) || 100); }
+
+            // ── Grid creation ─────────────────────────────────────
+            function createGrid(n, m, filledInit) {
+                const g = [];
+                for (let r = 0; r < m; r++) {
+                    g[r] = new Array(n).fill(0);
+                }
+                let placed = 0;
+                while (placed < filledInit && placed < n * m) {
+                    const r = Math.floor(Math.random() * m);
+                    const c = Math.floor(Math.random() * n);
+                    if (g[r][c] === 0) {
+                        g[r][c] = 1;
+                        placed++;
+                    }
+                }
+                return g;
+            }
+
+            function countFilledNeighbors(g, r, c, rows, cols) {
+                let count = 0;
+                if (r > 0 && g[r - 1][c] === 1) count++;
+                if (r < rows - 1 && g[r + 1][c] === 1) count++;
+                if (c > 0 && g[r][c - 1] === 1) count++;
+                if (c < cols - 1 && g[r][c + 1] === 1) count++;
+                return count;
+            }
+
+            // ── Drawing ───────────────────────────────────────────
+            function draw() {
+                if (!grid) return;
+                const rows = grid.length;
+                const cols = grid[0].length;
+                const cellW = canvas.width / cols;
+                const cellH = canvas.height / rows;
+                const fc = inpFilledColor.value;
+                const ec = inpEmptyColor.value;
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        ctx.fillStyle = grid[r][c] === 1 ? fc : ec;
+                        ctx.fillRect(c * cellW, r * cellH, cellW, cellH);
+                    }
+                }
+
+                ctx.strokeStyle = "rgba(225,226,230,0.35)";
+                ctx.lineWidth = 0.5;
+                for (let r = 0; r <= rows; r++) {
+                    ctx.beginPath(); ctx.moveTo(0, r * cellH); ctx.lineTo(canvas.width, r * cellH); ctx.stroke();
+                }
+                for (let c = 0; c <= cols; c++) {
+                    ctx.beginPath(); ctx.moveTo(c * cellW, 0); ctx.lineTo(c * cellW, canvas.height); ctx.stroke();
+                }
+            }
+
+            function updateCaption() {
+                const n = getN(), m = getM();
+                captionEl.innerHTML =
+                    "Filled: <strong>" + filledCount + "</strong> / " + (n * m) +
+                    " · Steps: <strong>" + steps + "</strong>" +
+                    " · T = " + getTemp() + "K" +
+                    " · μ = " + getMu();
+            }
+
+            // ── Regenerate ────────────────────────────────────────
+            function regenerate() {
+                if (intervalId) { clearInterval(intervalId); intervalId = null; }
+                running = false;
+                btnToggle.textContent = "▶ Start";
+                btnToggle.classList.remove("btn-danger");
+                btnToggle.classList.add("btn-primary");
+                steps = 0;
+
+                const n = getN(), m = getM();
+                grid = createGrid(n, m, getFilledInit());
+
+                // Count actual filled
+                filledCount = 0;
+                for (let r = 0; r < m; r++)
+                    for (let c = 0; c < n; c++)
+                        if (grid[r][c] === 1) filledCount++;
+
+                // Resize canvas
+                const container = canvas.parentElement;
+                const size = Math.min(container.clientWidth, 560);
+                canvas.width = size;
+                canvas.height = size;
+
+                draw();
+                updateCaption();
+            }
+
+            // ── Simulation step ───────────────────────────────────
+            function simulationStep() {
+                if (!grid) return;
+                const rows = grid.length;
+                const cols = grid[0].length;
+                const eps = getEps();
+                const mu = getMu();
+                const T = getTemp();
+
+                // 1. Pick a random cell
+                const r = Math.floor(Math.random() * rows);
+                const c = Math.floor(Math.random() * cols);
+
+                // 2. Count filled neighbors
+                const n_f = countFilledNeighbors(grid, r, c, rows, cols);
+
+                // 3. Current state
+                const s = grid[r][c];
+
+                // 4. Grand potential
+                const omega_current = n_f * eps * s - mu * s;
+                const s_new = 1 - s;
+                const omega_proposed = n_f * eps * s_new - mu * s_new;
+
+                // 5. Weight & probability
+                const q = Math.exp((omega_current - omega_proposed) / T);
+                const p = q / (1 + q);
+
+                // 6. Accept or reject
+                if (Math.random() <= p) {
+                    grid[r][c] = s_new;
+                    filledCount += (s_new === 1) ? 1 : -1;
+                }
+
+                steps++;
+                if (steps % 50 === 0) updateCaption();
+                draw();
+            }
+
+            // ── Start / Pause ─────────────────────────────────────
+            function toggleRunning() {
+                if (running) {
+                    clearInterval(intervalId);
+                    intervalId = null;
+                    running = false;
+                    btnToggle.textContent = "▶ Start";
+                    btnToggle.classList.remove("btn-danger");
+                    btnToggle.classList.add("btn-primary");
+                    updateCaption();
+                } else {
+                    intervalId = setInterval(simulationStep, getTimeStep());
+                    running = true;
+                    btnToggle.textContent = "⏸ Pause";
+                    btnToggle.classList.remove("btn-primary");
+                    btnToggle.classList.add("btn-danger");
+                }
+            }
+
+            // ── Canvas click → toggle cell ────────────────────────
+            canvas.addEventListener("click", function (e) {
+                if (!grid) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const cols = grid[0].length;
+                const rows = grid.length;
+                const c = Math.floor((x / canvas.width) * cols);
+                const r = Math.floor((y / canvas.height) * rows);
+                if (r >= 0 && r < rows && c >= 0 && c < cols) {
+                    if (grid[r][c] === 1) {
+                        grid[r][c] = 0;
+                        filledCount--;
+                    } else {
+                        grid[r][c] = 1;
+                        filledCount++;
+                    }
+                    draw();
+                    updateCaption();
+                }
+            });
+
+            // ── Color change redraws ──────────────────────────────
+            inpFilledColor.addEventListener("input", draw);
+            inpEmptyColor.addEventListener("input", draw);
+
+            // ── Wire buttons ──────────────────────────────────────
+            btnRegenerate.addEventListener("click", regenerate);
+            btnToggle.addEventListener("click", toggleRunning);
+
+            // ── Init ──────────────────────────────────────────────
+            regenerate();
+        })();
+    </script>
+</body>
+
+</html>
