@@ -21,9 +21,9 @@ export default function CodeBlock({ code, maxHeight }) {
                     }}
                 >
                     {tokens.map((line, i) => {
-                        const lineProps = getLineProps({ line, key: i });
+                        const { key: lineKey, ...lineProps } = getLineProps({ line, key: i });
                         return (
-                            <div key={i} {...lineProps}>
+                            <div key={lineKey || i} {...lineProps}>
                                 <span
                                     style={{
                                         display: "inline-block",
@@ -37,9 +37,10 @@ export default function CodeBlock({ code, maxHeight }) {
                                 >
                                     {i + 1}
                                 </span>
-                                {line.map((token, key) => (
-                                    <span key={key} {...getTokenProps({ token, key })} />
-                                ))}
+                                {line.map((token, key) => {
+                                    const { key: tokenKey, ...tokenProps } = getTokenProps({ token, key });
+                                    return <span key={tokenKey || key} {...tokenProps} />;
+                                })}
                             </div>
                         );
                     })}
