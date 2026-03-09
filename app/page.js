@@ -21,6 +21,16 @@ const assignments = [
     featured: true,
     image: "/images/grand_canonical_card.png",
   },
+  {
+    week: 3,
+    slug: "recit3",
+    title: "Binary Phase Transformation",
+    description:
+      "Simulate a binary A/B mixture with vacancies, exploring phase separation, coordination flips, and Glauber dynamics.",
+    status: "active",
+    featured: true,
+    image: "/images/binary_phase_card.png",
+  },
 ];
 
 function StatusBadge({ status }) {
@@ -88,7 +98,7 @@ export default function HomePage() {
         ))}
 
         {/* Placeholder for future weeks */}
-        {[3, 4].map((week) => (
+        {[4].map((week) => (
           <article
             key={week}
             className="assignment-card"
