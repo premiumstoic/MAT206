@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Week 3: Binary Phase Transformation — MAT206</title>
+    <meta name="description"
+        content="Simulate a binary A/B mixture on a 2D lattice using Monte Carlo Glauber dynamics, exploring phase separation, coordination flips, and kinetic rate-limiting steps." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --cream: #FDFBF7;
+            --charcoal: #2C303A;
+            --amber: #EBA352;
+            --amber-light: rgba(235, 163, 82, 0.12);
+            --cyan: #4A90E2;
+            --pencil: #E1E2E6;
+            --card: #FFFFFF;
+            --secondary: #887763;
+            --serif: 'Lora', Georgia, serif;
+            --sans: 'Inter', -apple-system, sans-serif;
+            --mono: 'Fira Code', 'Courier New', monospace;
+            --radius-sm: 0.5rem;
+            --radius-md: 1rem;
+            --radius-pill: 9999px;
+            --shadow: 2px 4px 12px -2px rgba(44, 48, 58, .08);
+            --shadow-hover: 4px 8px 20px -4px rgba(44, 48, 58, .14);
+            --transition: .3s ease-in-out
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased
+        }
+
+        body {
+            font-family: var(--sans);
+            color: var(--charcoal);
+            background: var(--cream);
+            background-image: radial-gradient(rgba(136, 119, 99, .06) 1px, transparent 1px);
+            background-size: 24px 24px;
+            line-height: 1.6;
+            min-height: 100vh
+        }
+
+        a {
+            color: var(--cyan);
+            text-decoration: none
+        }
+
+        /* Header */
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(253, 251, 247, .85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--pencil)
+        }
+
+        .site-header-inner {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .75rem 1.5rem
+        }
+
+        .site-logo {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-family: var(--serif);
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--charcoal)
+        }
+
+        .site-nav a {
+            font-size: .85rem;
+            font-weight: 600;
+            color: var(--secondary);
+            border-bottom: 2px solid var(--amber);
+            padding-bottom: 2px
+        }
+
+        /* Column */
+        .col {
+            max-width: 740px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 4rem
+        }
+
+        /* Title */
+        .label {
+            display: inline-block;
+            font-family: var(--mono);
+            font-size: .7rem;
+            background: var(--amber-light);
+            color: var(--amber);
+            font-weight: 700;
+            padding: 4px 14px;
+            border-radius: var(--radius-pill);
+            text-transform: uppercase;
+            letter-spacing: .15em;
+            margin-bottom: 1rem
+        }
+
+        h1 {
+            font-family: var(--serif);
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: .5rem
+        }
+
+        .tagline {
+            color: var(--secondary);
+            font-size: 1.05rem;
+            font-style: italic;
+            margin-top: .5rem;
+            margin-bottom: 2rem
+        }
+
+        .title-block {
+            text-align: center;
+            margin-bottom: 2rem
+        }
+
+        /* Callout */
+        .callout {
+            background: var(--card);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--amber);
+            margin-bottom: 2rem
+        }
+
+        .callout h3 {
+            font-family: var(--serif);
+            font-size: 1.1rem;
+            margin-bottom: .5rem;
+            color: var(--amber)
+        }
+
+        .callout p {
+            color: var(--secondary);
+            font-size: .95rem;
+            line-height: 1.8
+        }
+
+        /* Divider */
+        .divider {
+            width: 100%;
+            height: 20px;
+            margin: 2rem 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 20'%3E%3Cpath d='M0 10 Q 15 0 30 10 T 60 10 T 90 10 T 120 10 T 150 10 T 180 10 T 210 10 T 240 10 T 270 10 T 300 10 T 330 10 T 360 10 T 390 10 T 420 10 T 450 10 T 480 10 T 510 10 T 540 10 T 570 10 T 600 10' fill='none' stroke='%23E1E2E6' stroke-width='1.5'/%3E%3C/svg%3E");
+            background-repeat: repeat-x;
+            background-size: 600px 20px
+        }
+
+        /* Steps */
+        .step-header {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+            margin-bottom: 1rem
+        }
+
+        .step-num {
+            font-family: var(--mono);
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--amber);
+            background: var(--amber-light);
+            padding: 4px 12px;
+            border-radius: var(--radius-pill);
+            flex-shrink: 0
+        }
+
+        .step-header h2 {
+            font-family: var(--serif);
+            font-size: 1.35rem;
+            font-weight: 700
+        }
+
+        .step-content {
+            color: var(--secondary);
+            font-size: .95rem;
+            line-height: 1.8
+        }
+
+        .step-content p {
+            margin-bottom: .75rem
+        }
+
+        .step-content ul,
+        .step-content ol {
+            padding-left: 1.5rem;
+            line-height: 2
+        }
+
+        .step-content strong {
+            color: var(--charcoal)
+        }
+
+        .step-content code {
+            font-family: var(--mono);
+            font-size: .85em;
+            background: var(--amber-light);
+            padding: 2px 6px;
+            border-radius: 4px
+        }
+
+        /* Energy cards */
+        .energy-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 1.25rem 0
+        }
+
+        .energy-card {
+            background: var(--card);
+            border-radius: var(--radius-sm);
+            padding: .75rem 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+            text-align: center
+        }
+
+        .energy-label {
+            font-family: var(--mono);
+            font-weight: 700;
+            font-size: .8rem;
+            color: var(--amber);
+            text-transform: uppercase;
+            letter-spacing: .08em
+        }
+
+        .energy-val {
+            font-family: var(--mono);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--charcoal);
+            margin: 4px 0
+        }
+
+        .energy-desc {
+            font-size: .78rem;
+            color: var(--secondary)
+        }
+
+        /* Equation */
+        .eq {
+            display: inline-block;
+            font-family: var(--mono);
+            font-size: 1rem;
+            background: var(--card);
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow);
+            font-weight: 600;
+            letter-spacing: .02em
+        }
+
+        .eq-row {
+            display: flex;
+            flex-direction: column;
+            gap: .75rem;
+            align-items: center;
+            margin: 1.5rem 0
+        }
+
+        /* Controls */
+        .controls-box {
+            background: white;
+            padding: 1.25rem;
+            border-radius: var(--radius-md);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .06)
+        }
+
+        .ctrl-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+            gap: .9rem
+        }
+
+        .ctrl-lbl {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: .72rem;
+            font-weight: 700;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: .06em
+        }
+
+        .ctrl-lbl input[type=number],
+        .ctrl-lbl select {
+            font-family: var(--mono);
+            font-size: .82rem;
+            padding: 5px 7px;
+            border: 1px solid var(--pencil);
+            border-radius: 6px;
+            background: var(--cream);
+            color: var(--charcoal)
+        }
+
+        .ctrl-lbl input[type=color] {
+            padding: 2px;
+            height: 34px;
+            cursor: pointer;
+            border: 1px solid var(--pencil);
+            border-radius: 6px;
+            background: var(--cream);
+            width: 100%
+        }
+
+        .ctrl-lbl select {
+            cursor: pointer
+        }
+
+        /* Slider */
+        .slider-row {
+            margin-top: 1.25rem
+        }
+
+        .slider-row label {
+            font-size: .75rem;
+            font-weight: 700;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: .06em
+        }
+
+        .slider-row input[type=range] {
+            width: 100%;
+            margin-top: 6px;
+            accent-color: var(--amber)
+        }
+
+        .slider-val {
+            font-weight: 700;
+            color: var(--charcoal)
+        }
+
+        /* Coord radios */
+        .coord-row {
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap
+        }
+
+        .coord-row label {
+            font-size: .75rem;
+            font-weight: 700;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: .06em
+        }
+
+        .coord-radio {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: .85rem;
+            cursor: pointer;
+            font-weight: 400
+        }
+
+        .coord-radio input {
+            accent-color: var(--amber)
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 24px;
+            border-radius: var(--radius-pill);
+            font-family: var(--sans);
+            font-size: .85rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition)
+        }
+
+        .btn-amber {
+            background: var(--amber);
+            color: white
+        }
+
+        .btn-amber:hover {
+            background: #d48e3e
+        }
+
+        .btn-red {
+            background: #dc2626;
+            color: white
+        }
+
+        .btn-row {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem
+        }
+
+        /* Polaroid */
+        .polaroid {
+            background: white;
+            padding: 12px 12px 16px;
+            border-radius: 4px;
+            box-shadow: var(--shadow);
+            max-width: 580px;
+            margin: 1.5rem auto 0
+        }
+
+        .polaroid-inner {
+            aspect-ratio: 1;
+            width: 100%;
+            overflow: hidden;
+            background: #f5f3ef;
+            border-radius: 2px;
+            position: relative
+        }
+
+        .polaroid canvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            display: block
+        }
+
+        .polaroid-caption {
+            text-align: center;
+            font-family: var(--mono);
+            font-size: .75rem;
+            color: var(--secondary);
+            margin-top: 10px;
+            letter-spacing: .02em
+        }
+
+        /* Dashboard */
+        .dashboard {
+            background: white;
+            border-radius: var(--radius-md);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+            padding: 1.25rem;
+            margin-top: 1.5rem
+        }
+
+        .dashboard h3 {
+            font-family: var(--serif);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--charcoal)
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: .75rem
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px
+        }
+
+        .stat-item span:first-child {
+            font-size: .7rem;
+            font-weight: 700;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: .06em
+        }
+
+        .stat-item .stat-val {
+            font-family: var(--mono);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--charcoal)
+        }
+
+        /* Questions */
+        .q-section-title {
+            font-family: var(--serif);
+            font-size: 1.6rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem
+        }
+
+        .q-subtitle {
+            text-align: center;
+            color: var(--secondary);
+            font-size: .95rem;
+            margin-bottom: 2rem;
+            max-width: 540px;
+            margin-left: auto;
+            margin-right: auto
+        }
+
+        .q-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem
+        }
+
+        .q-card {
+            background: var(--card);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow);
+            padding: 1.25rem 1.5rem;
+            transition: box-shadow var(--transition), transform var(--transition)
+        }
+
+        .q-card:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px)
+        }
+
+        .q-badge {
+            display: inline-block;
+            font-family: var(--mono);
+            font-size: .7rem;
+            background: var(--amber-light);
+            color: var(--amber);
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: var(--radius-pill);
+            text-transform: uppercase;
+            letter-spacing: .1em
+        }
+
+        .q-text {
+            font-family: var(--serif);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: .5rem 0 .75rem
+        }
+
+        .q-answer {
+            color: var(--secondary);
+            font-size: .92rem;
+            line-height: 1.8
+        }
+
+        .q-answer strong {
+            color: var(--charcoal)
+        }
+
+        .q-tip {
+            margin-top: .75rem;
+            padding: .5rem .75rem;
+            background: var(--amber-light);
+            border-radius: var(--radius-sm);
+            font-size: .82rem;
+            color: var(--charcoal)
+        }
+
+        .q-tip::before {
+            content: '💡 '
+        }
+
+        /* Code blocks */
+        .code-block {
+            background: #011627;
+            color: #d6deeb;
+            font-family: var(--mono);
+            font-size: .82rem;
+            padding: 1.25rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-top: 1rem;
+            line-height: 1.7;
+            white-space: pre;
+            tab-size: 4
+        }
+
+        .kw {
+            color: #c792ea
+        }
+
+        .fn {
+            color: #82aaff
+        }
+
+        .str {
+            color: #addb67
+        }
+
+        .num {
+            color: #f78c6c
+        }
+
+        .cm {
+            color: #637777;
+            font-style: italic
+        }
+
+        .op {
+            color: #89ddff
+        }
+
+        /* Footer */
+        .site-footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--secondary);
+            font-size: .85rem;
+            border-top: 1px solid var(--pencil);
+            margin-top: 3rem
+        }
+
+        @media(max-width:640px) {
+            h1 {
+                font-size: 2rem
+            }
+
+            .energy-grid {
+                grid-template-columns: repeat(3, 1fr)
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="site-header">
+        <div class="site-header-inner">
+            <a href="/" style="text-decoration:none">
+                <div class="site-logo">⚛️ MAT206</div>
+            </a>
+            <nav class="site-nav"><a href="/">Assignments</a></nav>
+        </div>
+    </header>
+
+    <div class="col">
+
+        <!-- Title -->
+        <div class="title-block">
+            <span class="label">Assignment 03</span>
+            <h1>2D Binary Phase<br>Transformation</h1>
+            <p class="tagline">Two elements, two crystal structures, one thermodynamic competition.</p>
+        </div>
+
+        <!-- Context -->
+        <div class="callout">
+            <h3>Context</h3>
+            <p>This simulation models how a mixture of two atomic species (A and B) and vacancies evolve on a 2D
+                lattice. Unlike Weeks 1–2 which dealt with a single species, now the system must balance <strong>phase
+                    separation</strong> (AA and BB clusters forming, AB mixing penalized) with <strong>crystal structure
+                    competition</strong> (4-coordination vs 8-coordination). Two distinct kinetic mechanisms —
+                <strong>diffusion</strong> and <strong>coordination flips</strong> — drive the system toward its ground
+                state.</p>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Step 01 -->
+        <section style="margin-bottom:1rem">
+            <div class="step-header">
+                <span class="step-num">01</span>
+                <h2>Two Kinetic Mechanisms</h2>
+            </div>
+            <div class="step-content">
+                <p>The simulation models two distinct physical processes, controlled by the <strong>Diffusion / Flip
+                        slider</strong>:</p>
+                <ul>
+                    <li><strong>Diffusion (Swap Move):</strong> An atom physically migrates to an adjacent vacant
+                        lattice site. This represents <em>mass transport</em>.</li>
+                    <li><strong>Flip (Coordination Change):</strong> The atom stays physically stationary but switches
+                        its crystal packing configuration between 4-coordination and 8-coordination. This represents a
+                        local <em>structural phase transformation</em>.</li>
+                </ul>
+                <p style="margin-top:.75rem">The default 80/20 setting simulates a <strong>reaction-limited</strong>
+                    process: atoms move around easily, but the structural transformation is the bottleneck — analogous
+                    to the slow oxidation of iron.</p>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- Step 02 -->
+        <section style="margin-bottom:1rem">
+            <div class="step-header">
+                <span class="step-num">02</span>
+                <h2>Thermodynamics &amp; Interaction Energies</h2>
+            </div>
+            <div class="step-content">
+                <p>Evolution is driven by minimizing internal energy. The local energy depends on pairwise interactions:
+                </p>
+                <div class="energy-grid">
+                    <div class="energy-card">
+                        <div class="energy-label">E_AA</div>
+                        <div class="energy-val">−10</div>
+                        <div class="energy-desc">Weakly attractive</div>
+                    </div>
+                    <div class="energy-card">
+                        <div class="energy-label">E_BB</div>
+                        <div class="energy-val">−50</div>
+                        <div class="energy-desc">Strongly attractive</div>
+                    </div>
+                    <div class="energy-card">
+                        <div class="energy-label">E_AB</div>
+                        <div class="energy-val">+50</div>
+                        <div class="energy-desc">Highly repulsive</div>
+                    </div>
+                </div>
+                <p>Because same-species interactions are negative (favorable) and cross-species positive (unfavorable),
+                    the system is thermodynamically driven to <strong>phase separate</strong>. B clusters are the most
+                    tightly bound.</p>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- Step 03 -->
+        <section style="margin-bottom:1rem">
+            <div class="step-header">
+                <span class="step-num">03</span>
+                <h2>Glauber Dynamics</h2>
+            </div>
+            <div class="step-content">
+                <p>Each proposed move is accepted/rejected using <strong>Glauber dynamics</strong>. For a move with
+                    energy change ΔE:</p>
+                <div class="eq-row">
+                    <span class="eq">q = exp(−ΔE / T)</span>
+                    <span class="eq">p = q / (1 + q)</span>
+                </div>
+                <ul>
+                    <li><strong>Low T:</strong> System strictly obeys energy gradients — only energy-lowering moves
+                        accepted.</li>
+                    <li><strong>High T:</strong> p → 0.5 — moves accepted ~50% of the time regardless of ΔE (entropy
+                        dominates).</li>
+                </ul>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- Step 04 -->
+        <section style="margin-bottom:1rem">
+            <div class="step-header">
+                <span class="step-num">04</span>
+                <h2>Crystal Coordination: 4 vs 8</h2>
+            </div>
+            <div class="step-content">
+                <ul>
+                    <li><strong>4-Coordination:</strong> Atom interacts with Up, Down, Left, Right neighbors only.</li>
+                    <li><strong>8-Coordination:</strong> Atom interacts with all 8 directions (includes diagonals).</li>
+                    <li><strong>"Both" Mode:</strong> Atoms can switch between coordination states via flip moves.
+                        Coordination is shown by the outline color on each cell.</li>
+                </ul>
+                <p style="margin-top:.75rem">Periodic boundary conditions wrap the grid — an atom at the right edge sees
+                    the left edge as its neighbor.</p>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- Interactive Sandbox -->
+        <section style="margin-bottom:1rem">
+            <div class="step-header">
+                <h2 style="font-family:var(--serif)">Interactive Sandbox</h2>
+            </div>
+            <p class="step-content" style="margin-bottom:1.25rem">Click any cell to cycle it: <strong>A → B → Empty →
+                    A</strong>. The dashboard below updates in real time. In "Both" mode, cell outlines show
+                coordination state.</p>
+
+            <div class="controls-box">
+                <div class="ctrl-grid">
+                    <label class="ctrl-lbl">Width (n)<input type="number" id="inp-n" value="40" min="2"
+                            max="100"></label>
+                    <label class="ctrl-lbl">Height (m)<input type="number" id="inp-m" value="40" min="2"
+                            max="100"></label>
+                    <label class="ctrl-lbl">Init. A count<input type="number" id="inp-ia" value="400" min="0"></label>
+                    <label class="ctrl-lbl">Init. B count<input type="number" id="inp-ib" value="400" min="0"></label>
+                    <label class="ctrl-lbl">E_AA<input type="number" id="inp-eaa" value="-10"></label>
+                    <label class="ctrl-lbl">E_BB<input type="number" id="inp-ebb" value="-50"></label>
+                    <label class="ctrl-lbl">E_AB<input type="number" id="inp-eab" value="50"></label>
+                    <label class="ctrl-lbl">Temperature<input type="number" id="inp-T" value="100" min="1"></label>
+                    <label class="ctrl-lbl">Timestep (ms)<input type="number" id="inp-ts" value="1" min="1"
+                            max="2000"></label>
+                    <label class="ctrl-lbl">MC attempts<input type="number" id="inp-att" value="100" min="1"
+                            max="5000"></label>
+                    <label class="ctrl-lbl">A Color<input type="color" id="inp-ca" value="#4A90E2"></label>
+                    <label class="ctrl-lbl">B Color<input type="color" id="inp-cb" value="#E85D5D"></label>
+                    <label class="ctrl-lbl">Empty Color<input type="color" id="inp-ce" value="#FDFBF7"></label>
+                    <label class="ctrl-lbl">4-coord outline<input type="color" id="inp-c4" value="#EBA352"></label>
+                    <label class="ctrl-lbl">8-coord outline<input type="color" id="inp-c8" value="#7C4DFF"></label>
+                </div>
+
+                <div class="slider-row">
+                    <label>Diffusion ↔ Flip: <span class="slider-val" id="sliderVal">80% Diffusion / 20%
+                            Flip</span></label>
+                    <input type="range" id="inp-diff" min="0" max="1" step="0.01" value="0.8">
+                </div>
+
+                <div class="coord-row">
+                    <label>Coordination:</label>
+                    <label class="coord-radio"><input type="radio" name="coord" value="4" checked> 4-coord</label>
+                    <label class="coord-radio"><input type="radio" name="coord" value="8"> 8-coord</label>
+                    <label class="coord-radio"><input type="radio" name="coord" value="both"> Both</label>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-amber" id="btn-reset">🔄 Reset</button>
+                <button class="btn btn-amber" id="btn-toggle">▶ Start</button>
+            </div>
+
+            <div class="polaroid">
+                <div class="polaroid-inner">
+                    <canvas id="sim-canvas"></canvas>
+                </div>
+                <div class="polaroid-caption" id="caption">Step: <strong>0</strong> · A: <strong>400</strong> · B:
+                    <strong>400</strong> · Filled: <strong>50.0%</strong> · T = 100</div>
+            </div>
+
+            <div class="dashboard" id="dashboard">
+                <h3>📊 Live Statistics Dashboard</h3>
+                <div class="stat-grid">
+                    <div class="stat-item"><span>Total A</span><span class="stat-val" id="s-a"
+                            style="color:#4A90E2">400</span></div>
+                    <div class="stat-item"><span>Total B</span><span class="stat-val" id="s-b"
+                            style="color:#E85D5D">400</span></div>
+                    <div class="stat-item"><span>Filled Fraction</span><span class="stat-val" id="s-fill">50.0%</span>
+                    </div>
+                    <div class="stat-item" id="sd-4" style="display:none"><span>4-coord (all)</span><span
+                            class="stat-val" id="s-4"></span></div>
+                    <div class="stat-item" id="sd-4a" style="display:none"><span>4-coord A</span><span class="stat-val"
+                            id="s-4a"></span></div>
+                    <div class="stat-item" id="sd-4b" style="display:none"><span>4-coord B</span><span class="stat-val"
+                            id="s-4b"></span></div>
+                    <div class="stat-item" id="sd-8" style="display:none"><span>8-coord (all)</span><span
+                            class="stat-val" id="s-8"></span></div>
+                    <div class="stat-item" id="sd-8a" style="display:none"><span>8-coord A</span><span class="stat-val"
+                            id="s-8a"></span></div>
+                    <div class="stat-item" id="sd-8b" style="display:none"><span>8-coord B</span><span class="stat-val"
+                            id="s-8b"></span></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- Exploration Questions -->
+        <section>
+            <h2 class="q-section-title">🔬 Exploration Questions</h2>
+            <p class="q-subtitle">Adjust the controls and observe each phenomenon. Each question targets a distinct
+                physical behavior.</p>
+            <div class="q-list">
+
+                <div class="q-card">
+                    <span class="q-badge">Question 1 — Baseline</span>
+                    <p class="q-text">Set to a single element (Init. B = 0) and force 4-coordination. How does this
+                        compare to Week 1?</p>
+                    <div class="q-answer">
+                        <p>With only A atoms and 4-coordination, this reduces exactly to the Week 1 Canonical MC
+                            simulation. At low T, A atoms cluster (E_AA = −10 attractive). At high T, they remain mixed.
+                            The landscape is identical — one species, one crystal structure.</p>
+                    </div>
+                    <div class="q-tip">Set Init. B = 0, Coordination = 4-coord, T = 50. Watch clustering behavior.</div>
+                </div>
+
+                <div class="q-card">
+                    <span class="q-badge">Question 2 — Energy Variations</span>
+                    <p class="q-text">Change E_AB from +50 to 0 or negative. How does phase separation change?</p>
+                    <div class="q-answer">
+                        <p><strong>E_AB = 0:</strong> A and B are thermodynamically neutral. Clustering is still driven
+                            by E_AA and E_BB preferences, but weaker.</p>
+                        <p style="margin-top:.5rem"><strong>E_AB negative:</strong> A and B now prefer each other,
+                            forming an ordered alloy (alternating A-B-A-B) — analogous to an ordered intermetallic
+                            compound.</p>
+                    </div>
+                    <div class="q-tip">Try E_AB = 0, then E_AB = −50. Compare microstructures at low T.</div>
+                </div>
+
+                <div class="q-card">
+                    <span class="q-badge">Question 3 — Temperature Extremes</span>
+                    <p class="q-text">Compare the system at T = 5 (very low) versus T = 500 (very high). What drives
+                        behavior in each case?</p>
+                    <div class="q-answer">
+                        <p><strong>Low T ≈ 5:</strong> Only energy-lowering moves accepted. Large, compact A-rich and
+                            B-rich domains with sharp interfaces form — <em>enthalpy dominated</em>.</p>
+                        <p style="margin-top:.5rem"><strong>High T ≈ 500:</strong> All moves accepted ~50% of the time.
+                            The grid becomes a random mixture — <em>entropy dominated</em>. This is the disordered
+                            high-T solid solution phase.</p>
+                    </div>
+                    <div class="q-tip">Run at T = 5, then T = 500. Note how fast each approaches equilibrium.</div>
+                </div>
+
+                <div class="q-card">
+                    <span class="q-badge">Question 4 — Crystal Segregation</span>
+                    <p class="q-text">In "Both" coordination mode at low T, which crystal structure does each species
+                        prefer? Does temperature change the outcome?</p>
+                    <div class="q-answer">
+                        <p>B atoms (E_BB = −50) strongly prefer 8-coordination — more neighbors means more energy
+                            savings. A atoms with weaker bonds may settle in either coordination depending on the local
+                            environment. At high T, both states equalize (~50/50). Watch the dashboard to track %
+                            8-coord A vs B over time.</p>
+                    </div>
+                    <div class="q-tip">Set Coordination = Both, T = 50. Run to equilibrium and check the dashboard
+                        stats.</div>
+                </div>
+
+                <div class="q-card">
+                    <span class="q-badge">Question 5 — Pure Phases</span>
+                    <p class="q-text">Is it possible to achieve a purely 4-coord or purely 8-coord system when "Both" is
+                        active?</p>
+                    <div class="q-answer">
+                        <p>In principle yes, but it requires extreme conditions. Even at low T, entropy introduces
+                            fluctuations into the minority coordination state. A "pure" phase can only be approached as
+                            T → 0, or by making one state so energetically favorable that the other is essentially never
+                            accessed.</p>
+                    </div>
+                    <div class="q-tip">Try only A atoms, E_AA = −200, Coordination = Both, T = 1. Check if the dashboard
+                        reaches 100% 4-coord.</div>
+                </div>
+
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- Code: Grid & PBC -->
+        <section style="margin-bottom:1rem">
+            <div class="step-header">
+                <span class="step-num">06</span>
+                <h2>Under the Hood: Grid &amp; Periodic Boundaries</h2>
+            </div>
+            <div class="step-content">
+                <p>Each cell stores both a <code>type</code> (A/B/Empty) and a <code>coord</code> (4 or 8). Periodic
+                    boundaries use modulo arithmetic:</p>
+                <div class="code-block"><span class="cm">// Cell: { type: 0=Empty | 1=A | 2=B, coord: 4 | 8 }</span>
+                    <span class="kw">function</span> <span class="fn">createGrid</span>(n, m, initA, initB) {
+                    <span class="kw">const</span> flat = Array(n * m).<span class="fn">fill</span>(<span
+                        class="kw">null</span>).<span class="fn">map</span>((_, i) <span class="op">=&gt;</span> {
+                    <span class="kw">if</span> (i <span class="op">&lt;</span> initA) <span class="kw">return</span> {
+                    type: A, coord: <span class="num">4</span> };
+                    <span class="kw">if</span> (i <span class="op">&lt;</span> initA + initB) <span
+                        class="kw">return</span> { type: B, coord: <span class="num">4</span> };
+                    <span class="kw">return</span> { type: EMPTY, coord: <span class="num">4</span> };
+                    });
+                    <span class="cm">// Fisher-Yates shuffle</span>
+                    <span class="kw">for</span> (<span class="kw">let</span> i <span class="op">=</span> flat.length
+                    <span class="op">-</span> <span class="num">1</span>; i <span class="op">&gt;</span> <span
+                        class="num">0</span>; i<span class="op">--</span>) {
+                    <span class="kw">const</span> j <span class="op">=</span> Math.<span
+                        class="fn">floor</span>(Math.<span class="fn">random</span>() <span class="op">*</span> (i <span
+                        class="op">+</span> <span class="num">1</span>));
+                    [flat[i], flat[j]] <span class="op">=</span> [flat[j], flat[i]];
+                    }
+                    <span class="kw">return</span> <span class="fn">chunk</span>(flat, n); <span class="cm">// reshape
+                        into m rows of n</span>
+                    }
+
+                    <span class="cm">// Periodic 4-coord neighbors (wrap with modulo)</span>
+                    <span class="kw">function</span> <span class="fn">neighbors4</span>(r, c, rows, cols) {
+                    <span class="kw">return</span> [
+                    [(r <span class="op">-</span> <span class="num">1</span> <span class="op">+</span> rows) <span
+                        class="op">%</span> rows, c], <span class="cm">// up (wraps)</span>
+                    [(r <span class="op">+</span> <span class="num">1</span>) <span class="op">%</span> rows, c], <span
+                        class="cm">// down</span>
+                    [r, (c <span class="op">-</span> <span class="num">1</span> <span class="op">+</span> cols) <span
+                        class="op">%</span> cols], <span class="cm">// left</span>
+                    [r, (c <span class="op">+</span> <span class="num">1</span>) <span class="op">%</span> cols], <span
+                        class="cm">// right</span>
+                    ];
+                    }
+                </div>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- Code: Glauber -->
+        <section style="margin-bottom:1rem">
+            <div class="step-header">
+                <span class="step-num">07</span>
+                <h2>Under the Hood: Glauber Dynamics</h2>
+            </div>
+            <div class="step-content">
+                <p>Cell energy is computed by summing pairwise interactions with neighbors. The Glauber probability then
+                    decides acceptance:</p>
+                <div class="code-block"><span class="kw">function</span> <span class="fn">cellEnergy</span>(grid, r, c,
+                    coord, eAA, eBB, eAB) {
+                    <span class="kw">const</span> type <span class="op">=</span> grid[r][c].type;
+                    <span class="kw">if</span> (type <span class="op">===</span> EMPTY) <span class="kw">return</span>
+                    <span class="num">0</span>;
+                    <span class="kw">let</span> e <span class="op">=</span> <span class="num">0</span>;
+                    <span class="kw">for</span> (<span class="kw">const</span> [nr, nc] <span class="kw">of</span> <span
+                        class="fn">getNeighbors</span>(r, c, coord)) {
+                    <span class="kw">const</span> ntype <span class="op">=</span> grid[nr][nc].type;
+                    <span class="kw">if</span> (ntype <span class="op">===</span> EMPTY) <span
+                        class="kw">continue</span>;
+                    <span class="kw">if</span> (type <span class="op">===</span> A <span class="op">&amp;&amp;</span>
+                    ntype <span class="op">===</span> A) e <span class="op">+=</span> eAA;
+                    <span class="kw">else if</span> (type <span class="op">===</span> B <span
+                        class="op">&amp;&amp;</span> ntype <span class="op">===</span> B) e <span class="op">+=</span>
+                    eBB;
+                    <span class="kw">else</span> e <span class="op">+=</span> eAB;
+                    }
+                    <span class="kw">return</span> e;
+                    }
+
+                    <span class="kw">function</span> <span class="fn">glauberProb</span>(eCurrent, eProposed, T) {
+                    <span class="kw">const</span> q <span class="op">=</span> Math.<span class="fn">exp</span>(<span
+                        class="op">-</span>(eProposed <span class="op">-</span> eCurrent) <span class="op">/</span> T);
+                    <span class="kw">return</span> q <span class="op">/</span> (<span class="num">1</span> <span
+                        class="op">+</span> q);
+                    }
+                </div>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- Code: Flip -->
+        <section style="margin-bottom:1rem">
+            <div class="step-header">
+                <span class="step-num">08</span>
+                <h2>Under the Hood: The Flip Move</h2>
+            </div>
+            <div class="step-content">
+                <p>The flip move is unique — the atom stays in place but its coordination label changes. Energy is
+                    recomputed under the new coordination:</p>
+                <div class="code-block"><span class="cm">// Flip: one random filled site toggles coordination</span>
+                    <span class="kw">const</span> r <span class="op">=</span> Math.<span
+                        class="fn">floor</span>(Math.<span class="fn">random</span>() <span class="op">*</span> rows);
+                    <span class="kw">const</span> c <span class="op">=</span> Math.<span
+                        class="fn">floor</span>(Math.<span class="fn">random</span>() <span class="op">*</span> cols);
+                    <span class="kw">const</span> cell <span class="op">=</span> grid[r][c];
+                    <span class="kw">if</span> (cell.type <span class="op">===</span> EMPTY) <span
+                        class="kw">continue</span>;
+
+                    <span class="kw">const</span> curCoord <span class="op">=</span> cell.coord; <span class="cm">// 4
+                        or 8</span>
+                    <span class="kw">const</span> newCoord <span class="op">=</span> curCoord <span
+                        class="op">===</span> <span class="num">4</span> <span class="op">?</span> <span
+                        class="num">8</span> <span class="op">:</span> <span class="num">4</span>;
+
+                    <span class="kw">const</span> eCurrent <span class="op">=</span> <span
+                        class="fn">cellEnergy</span>(grid, r, c, curCoord, ...);
+                    <span class="kw">const</span> eProposed <span class="op">=</span> <span
+                        class="fn">cellEnergy</span>(grid, r, c, newCoord, ...);
+
+                    <span class="kw">const</span> p <span class="op">=</span> <span
+                        class="fn">glauberProb</span>(eCurrent, eProposed, T);
+                    <span class="kw">if</span> (Math.<span class="fn">random</span>() <span class="op">&lt;=</span> p) {
+                    <span class="cm">// Atom stays put — only coordination changes</span>
+                    grid[r][c] <span class="op">=</span> { type: cell.type, coord: newCoord };
+                    }
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="site-footer">MAT206 — Kinetics of Materials · Spring 2026</footer>
+
+    <script>
+        (function () {
+            "use strict";
+            const EMPTY = 0, A = 1, B = 2;
+
+            // ── DOM ──────────────────────────────────────────
+            const canvas = document.getElementById("sim-canvas");
+            const ctx = canvas.getContext("2d");
+            const caption = document.getElementById("caption");
+            const diffSlider = document.getElementById("inp-diff");
+            const sliderVal = document.getElementById("sliderVal");
+            const btnReset = document.getElementById("btn-reset");
+            const btnToggle = document.getElementById("btn-toggle");
+
+            // ── State ─────────────────────────────────────────
+            let grid = null, running = false, ivId = null, step = 0;
+
+            // ── Inputs ────────────────────────────────────────
+            const g = id => document.getElementById(id);
+            const gn = id => Number(g(id).value);
+            const gc = id => g(id).value;
+            const getCoordMode = () => document.querySelector('input[name="coord"]:checked').value;
+
+            // Update slider label
+            diffSlider.addEventListener("input", () => {
+                const d = Math.round(Number(diffSlider.value) * 100);
+                sliderVal.textContent = d + "% Diffusion / " + (100 - d) + "% Flip";
+            });
+
+            // Show/hide coord dashboard stats
+            function updateDashboardVisibility(mode) {
+                const ids = ["sd-4", "sd-4a", "sd-4b", "sd-8", "sd-8a", "sd-8b"];
+                ids.forEach(id => g(id).style.display = mode === "both" ? "" : "none");
+            }
+            document.querySelectorAll('input[name="coord"]').forEach(r => r.addEventListener("change", () => updateDashboardVisibility(getCoordMode())));
+
+            // ── Neighbor helpers ──────────────────────────────
+            function nbrs4(r, c, rows, cols) {
+                return [[(r - 1 + rows) % rows, c], [(r + 1) % rows, c], [r, (c - 1 + cols) % cols], [r, (c + 1) % cols]];
+            }
+            function nbrs8(r, c, rows, cols) {
+                const rows_1 = (r - 1 + rows) % rows, rows1 = (r + 1) % rows, cols_1 = (c - 1 + cols) % cols, cols1 = (c + 1) % cols;
+                return [[rows_1, c], [rows1, c], [r, cols_1], [r, cols1], [rows_1, cols_1], [rows_1, cols1], [rows1, cols_1], [rows1, cols1]];
+            }
+            function getNbrs(r, c, coord, rows, cols) { return coord === 8 ? nbrs8(r, c, rows, cols) : nbrs4(r, c, rows, cols); }
+
+            // ── Energy ────────────────────────────────────────
+            function cellEnergy(grid, r, c, coord, eAA, eBB, eAB) {
+                const type = grid[r][c].type;
+                if (type === EMPTY) return 0;
+                const rows = grid.length, cols = grid[0].length;
+                let e = 0;
+                for (const [nr, nc] of getNbrs(r, c, coord, rows, cols)) {
+                    const nt = grid[nr][nc].type;
+                    if (nt === EMPTY) continue;
+                    if (type === A && nt === A) e += eAA;
+                    else if (type === B && nt === B) e += eBB;
+                    else e += eAB;
+                }
+                return e;
+            }
+
+            function glauberP(eCur, eProp, T) {
+                const q = Math.exp(-(eProp - eCur) / T);
+                return q / (1 + q);
+            }
+
+            // ── Grid creation ─────────────────────────────────
+            function createGrid(n, m, initA, initB) {
+                const total = n * m;
+                const nA = Math.min(initA, total), nB = Math.min(initB, total - nA);
+                const flat = Array(total).fill(null).map((_, i) => {
+                    if (i < nA) return { type: A, coord: 4 };
+                    if (i < nA + nB) return { type: B, coord: 4 };
+                    return { type: EMPTY, coord: 4 };
+                });
+                for (let i = flat.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [flat[i], flat[j]] = [flat[j], flat[i]];
+                }
+                const g = [];
+                for (let r = 0; r < m; r++) g[r] = flat.slice(r * n, (r + 1) * n);
+                return g;
+            }
+
+            // ── Draw ──────────────────────────────────────────
+            function draw() {
+                if (!grid) return;
+                const rows = grid.length, cols = grid[0].length;
+                const cW = canvas.width / cols, cH = canvas.height / rows;
+                const cA = gc("inp-ca"), cB = gc("inp-cb"), cE = gc("inp-ce"), c4 = gc("inp-c4"), c8 = gc("inp-c8");
+                const mode = getCoordMode();
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const cell = grid[r][c];
+                        ctx.fillStyle = cell.type === A ? cA : cell.type === B ? cB : cE;
+                        ctx.fillRect(c * cW, r * cH, cW, cH);
+                        if (cell.type !== EMPTY && mode === "both") {
+                            ctx.strokeStyle = cell.coord === 4 ? c4 : c8;
+                            const lw = Math.max(1, cW * 0.12);
+                            ctx.lineWidth = lw;
+                            ctx.strokeRect(c * cW + lw / 2, r * cH + lw / 2, cW - lw, cH - lw);
+                        }
+                    }
+                }
+                ctx.strokeStyle = "rgba(200,200,200,0.2)";
+                ctx.lineWidth = 0.5;
+                for (let r = 0; r <= rows; r++) { ctx.beginPath(); ctx.moveTo(0, r * cH); ctx.lineTo(canvas.width, r * cH); ctx.stroke(); }
+                for (let c = 0; c <= cols; c++) { ctx.beginPath(); ctx.moveTo(c * cW, 0); ctx.lineTo(c * cW, canvas.height); ctx.stroke(); }
+            }
+
+            // ── Stats ─────────────────────────────────────────
+            function updateStats() {
+                if (!grid) return;
+                const rows = grid.length, cols = grid[0].length;
+                let cA = 0, cB = 0, n4A = 0, n4B = 0, n8A = 0, n8B = 0;
+                for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+                    const cell = grid[r][c];
+                    if (cell.type === EMPTY) continue;
+                    if (cell.type === A) cA++; else cB++;
+                    if (cell.coord === 4) { if (cell.type === A) n4A++; else n4B++; }
+                    else { if (cell.type === A) n8A++; else n8B++; }
+                }
+                const total = rows * cols, filled = cA + cB;
+                const pct = v => filled > 0 ? (v / filled * 100).toFixed(1) + "%" : "0%";
+
+                g("s-a").textContent = cA;
+                g("s-a").style.color = gc("inp-ca");
+                g("s-b").textContent = cB;
+                g("s-b").style.color = gc("inp-cb");
+                g("s-fill").textContent = (filled / total * 100).toFixed(1) + "%";
+                g("s-4").textContent = pct(n4A + n4B);
+                g("s-4a").textContent = pct(n4A);
+                g("s-4b").textContent = pct(n4B);
+                g("s-8").textContent = pct(n8A + n8B);
+                g("s-8a").textContent = pct(n8A);
+                g("s-8b").textContent = pct(n8B);
+
+                caption.innerHTML = "Step: <strong>" + step + "</strong> · A: <strong>" + cA + "</strong> · B: <strong>" + cB + "</strong> · Filled: <strong>" + (filled / total * 100).toFixed(1) + "%</strong> · T = " + gn("inp-T");
+            }
+
+            // ── Reset ─────────────────────────────────────────
+            function reset() {
+                if (ivId) { clearInterval(ivId); ivId = null; }
+                running = false; step = 0;
+                btnToggle.textContent = "▶ Start";
+                btnToggle.className = "btn btn-amber";
+
+                const n = gn("inp-n"), m = gn("inp-m");
+                grid = createGrid(n, m, gn("inp-ia"), gn("inp-ib"));
+
+                const container = canvas.parentElement;
+                const size = Math.min(container.clientWidth - 4, 560);
+                canvas.width = size; canvas.height = size;
+
+                updateDashboardVisibility(getCoordMode());
+                draw(); updateStats();
+            }
+
+            // ── Simulation step ───────────────────────────────
+            function simStep() {
+                if (!grid) return;
+                const rows = grid.length, cols = grid[0].length;
+                const eAA = gn("inp-eaa"), eBB = gn("inp-ebb"), eAB = gn("inp-eab");
+                const T = Math.max(1, gn("inp-T"));
+                const dp = Number(diffSlider.value);
+                const mode = getCoordMode();
+                const attempts = Math.max(1, gn("inp-att"));
+
+                for (let k = 0; k < attempts; k++) {
+                    const forced = (mode !== "both");
+                    const isDiff = forced || Math.random() < dp;
+
+                    if (isDiff) {
+                        // Diffusion
+                        const r1 = Math.floor(Math.random() * rows), c1 = Math.floor(Math.random() * cols);
+                        const r2 = Math.floor(Math.random() * rows), c2 = Math.floor(Math.random() * cols);
+                        if (r1 === r2 && c1 === c2) continue;
+                        const cell1 = grid[r1][c1], cell2 = grid[r2][c2];
+                        const oneEmpty = (cell1.type === EMPTY) !== (cell2.type === EMPTY);
+                        if (!oneEmpty) continue;
+
+                        let fR, fC, eR, eC;
+                        if (cell1.type !== EMPTY) { fR = r1; fC = c1; eR = r2; eC = c2; }
+                        else { fR = r2; fC = c2; eR = r1; eC = c1; }
+
+                        let coord;
+                        if (mode === "both") coord = Math.random() < 0.5 ? 4 : 8;
+                        else coord = mode === "8" ? 8 : 4;
+
+                        const eCur = cellEnergy(grid, fR, fC, coord, eAA, eBB, eAB);
+
+                        // Temporarily swap
+                        const sf = { ...grid[fR][fC] }, se = { ...grid[eR][eC] };
+                        grid[eR][eC] = { type: sf.type, coord };
+                        grid[fR][fC] = { type: EMPTY, coord: sf.coord };
+                        const eProp = cellEnergy(grid, eR, eC, coord, eAA, eBB, eAB);
+                        // Revert
+                        grid[fR][fC] = sf; grid[eR][eC] = se;
+
+                        if (Math.random() <= glauberP(eCur, eProp, T)) {
+                            grid[eR][eC] = { type: sf.type, coord };
+                            grid[fR][fC] = { type: EMPTY, coord: sf.coord };
+                        }
+                    } else {
+                        // Flip
+                        if (mode !== "both") continue;
+                        const r = Math.floor(Math.random() * rows), c = Math.floor(Math.random() * cols);
+                        const cell = grid[r][c];
+                        if (cell.type === EMPTY) continue;
+                        const curC = cell.coord || 4, newC = curC === 4 ? 8 : 4;
+                        const eCur = cellEnergy(grid, r, c, curC, eAA, eBB, eAB);
+                        const eProp = cellEnergy(grid, r, c, newC, eAA, eBB, eAB);
+                        if (Math.random() <= glauberP(eCur, eProp, T)) {
+                            grid[r][c] = { type: cell.type, coord: newC };
+                        }
+                    }
+                }
+
+                step++;
+                draw();
+                if (step % 20 === 0) updateStats();
+            }
+
+            // ── Toggle ────────────────────────────────────────
+            function toggleRunning() {
+                if (running) {
+                    clearInterval(ivId); ivId = null; running = false;
+                    btnToggle.textContent = "▶ Start";
+                    btnToggle.className = "btn btn-amber";
+                    updateStats();
+                } else {
+                    ivId = setInterval(simStep, Math.max(1, gn("inp-ts")));
+                    running = true;
+                    btnToggle.textContent = "⏸ Pause";
+                    btnToggle.className = "btn btn-red";
+                }
+            }
+
+            // ── Canvas click → cycle cell ─────────────────────
+            canvas.addEventListener("click", e => {
+                if (!grid) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left, y = e.clientY - rect.top;
+                const cols = grid[0].length, rows = grid.length;
+                const c = Math.floor((x / canvas.width) * cols);
+                const r = Math.floor((y / canvas.height) * rows);
+                if (r < 0 || r >= rows || c < 0 || c >= cols) return;
+                const cell = grid[r][c];
+                cell.type = cell.type === A ? B : cell.type === B ? EMPTY : A;
+                draw(); updateStats();
+            });
+
+            // ── Color change redraws ──────────────────────────
+            ["inp-ca", "inp-cb", "inp-ce", "inp-c4", "inp-c8"].forEach(id => g(id).addEventListener("input", draw));
+
+            // ── Wire up ───────────────────────────────────────
+            btnReset.addEventListener("click", reset);
+            btnToggle.addEventListener("click", toggleRunning);
+
+            // ── Init ──────────────────────────────────────────
+            reset();
+        })();
+    </script>
+</body>
+
+</html>
