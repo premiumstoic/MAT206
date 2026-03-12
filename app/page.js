@@ -31,6 +31,16 @@ const assignments = [
     featured: true,
     image: "/images/binary_phase_card.png",
   },
+  {
+    week: 4,
+    slug: "recit4",
+    title: "2D Particle Diffusion",
+    description:
+      "Model Brownian motion with Arrhenius kinetics in spatially heterogeneous environments. Explore diffusion barriers and temperature effects.",
+    status: "active",
+    featured: true,
+    image: "/images/kinetics_card.png",
+  },
 ];
 
 function StatusBadge({ status }) {
@@ -98,7 +108,7 @@ export default function HomePage() {
         ))}
 
         {/* Placeholder for future weeks */}
-        {[4].map((week) => (
+        {[5].map((week) => (
           <article
             key={week}
             className="assignment-card"
