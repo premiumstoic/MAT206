@@ -41,6 +41,16 @@ const assignments = [
     featured: true,
     image: "/images/kinetics_card.png",
   },
+  {
+    week: 5,
+    slug: "recit5",
+    title: "Wulff Construction",
+    description:
+      "Determine the equilibrium crystal shape from surface energies. Manipulate broken-bond penalties and generate Wulff envelopes.",
+    status: "active",
+    featured: true,
+    image: "/images/wulff_card.png",
+  },
 ];
 
 function StatusBadge({ status }) {
