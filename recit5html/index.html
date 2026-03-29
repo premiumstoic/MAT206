@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Week 5: Wulff Construction — MAT206</title>
+<meta name="description" content="Determine the equilibrium crystal shape from surface energies. Manipulate broken-bond penalties and generate Wulff envelopes."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--cream:#FDFBF7;--charcoal:#2C303A;--amber:#EBA352;--amber-light:rgba(235,163,82,0.12);--cyan:#4A90E2;--pencil:#E1E2E6;--card:#FFFFFF;--secondary:#887763;--serif:'Lora',Georgia,serif;--sans:'Inter',-apple-system,sans-serif;--mono:'Fira Code','Courier New',monospace;--radius-sm:0.5rem;--radius-md:1rem;--radius-pill:9999px;--shadow:2px 4px 12px -2px rgba(44,48,58,.08);--shadow-hover:4px 8px 20px -4px rgba(44,48,58,.14);--transition:.3s ease-in-out}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:var(--sans);color:var(--charcoal);background:var(--cream);background-image:radial-gradient(rgba(136,119,99,.06) 1px,transparent 1px);background-size:24px 24px;line-height:1.6;min-height:100vh}
+a{color:var(--cyan);text-decoration:none}
+
+/* Header */
+.site-header{position:sticky;top:0;z-index:100;background:rgba(253,251,247,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--pencil)}
+.site-header-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.5rem}
+.site-logo{display:flex;align-items:center;gap:.5rem;font-family:var(--serif);font-weight:700;font-size:1rem;color:var(--charcoal)}
+.site-nav a{font-size:.85rem;font-weight:600;color:var(--secondary);border-bottom:2px solid var(--amber);padding-bottom:2px}
+
+/* Column */
+.col{max-width:740px;margin:0 auto;padding:3rem 1.5rem 4rem}
+
+/* Title */
+.label{display:inline-block;font-family:var(--mono);font-size:.7rem;background:var(--amber-light);color:var(--amber);font-weight:700;padding:4px 14px;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:.15em;margin-bottom:1rem}
+h1{font-family:var(--serif);font-size:2.5rem;font-weight:700;line-height:1.2;margin-bottom:.5rem}
+.tagline{color:var(--secondary);font-size:1.05rem;font-style:italic;margin-top:.5rem;margin-bottom:2rem}
+.title-block{text-align:center;margin-bottom:2rem}
+
+/* Callout */
+.callout{background:var(--card);border-radius:var(--radius-md);padding:1.5rem;box-shadow:var(--shadow);border-left:4px solid var(--amber);margin-bottom:2rem}
+.callout h3{font-family:var(--serif);font-size:1.1rem;margin-bottom:.5rem;color:var(--amber)}
+.callout p{color:var(--secondary);font-size:.95rem;line-height:1.8}
+
+/* Divider */
+.divider{width:100%;height:20px;margin:2rem 0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 20'%3E%3Cpath d='M0 10 Q 15 0 30 10 T 60 10 T 90 10 T 120 10 T 150 10 T 180 10 T 210 10 T 240 10 T 270 10 T 300 10 T 330 10 T 360 10 T 390 10 T 420 10 T 450 10 T 480 10 T 510 10 T 540 10 T 570 10 T 600 10' fill='none' stroke='%23E1E2E6' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:repeat-x;background-size:600px 20px}
+
+/* Steps */
+.step-header{display:flex;align-items:baseline;gap:1rem;margin-bottom:1rem}
+.step-num{font-family:var(--mono);font-size:.85rem;font-weight:700;color:var(--amber);background:var(--amber-light);padding:4px 12px;border-radius:var(--radius-pill);flex-shrink:0}
+.step-header h2{font-family:var(--serif);font-size:1.35rem;font-weight:700}
+.step-content{color:var(--secondary);font-size:.95rem;line-height:1.8}
+.step-content p{margin-bottom:.75rem}
+.step-content ul,.step-content ol{padding-left:1.5rem;line-height:2}
+.step-content strong{color:var(--charcoal)}
+.step-content code{font-family:var(--mono);font-size:.85em;background:var(--amber-light);padding:2px 6px;border-radius:4px}
+
+/* Equation */
+.eq{display:inline-block;font-family:var(--mono);font-size:1rem;background:var(--card);padding:12px 24px;border-radius:var(--radius-md);box-shadow:var(--shadow);font-weight:600;letter-spacing:.02em}
+.eq-row{display:flex;flex-direction:column;gap:.75rem;align-items:center;margin:1.5rem 0}
+
+/* Grid layout for equations */
+.ineq-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0}
+.ineq-card{background:var(--card);padding:1rem;border-radius:10px;box-shadow:var(--shadow);text-align:center}
+.ineq-title{font-family:var(--mono);font-weight:700;color:var(--amber);margin-bottom:4px}
+
+/* Controls Layout - Interactive Sandbox */
+.sandbox-layout{display:flex;flex-wrap:wrap;gap:2rem;align-items:flex-start}
+.sandbox-controls{flex:1 1 300px;min-width:280px}
+.sandbox-canvas{flex:1 1 500px;display:flex;justify-content:center;position:sticky;top:2rem}
+
+.fieldset{border:1px solid var(--pencil);border-radius:var(--radius-md);padding:1.25rem;background:white;box-shadow:0 2px 8px rgba(0,0,0,.04);margin-bottom:1rem}
+.legend{font:700 .8rem var(--sans);color:var(--amber);padding:0 6px;text-transform:uppercase;letter-spacing:.06em}
+.ctrl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+.ctrl-lbl{display:flex;flex-direction:column;gap:6px;font-size:.75rem;font-weight:700;color:var(--secondary);text-transform:uppercase;letter-spacing:.05em}
+.ctrl-lbl-row{flex-direction:row;align-items:center;justify-content:space-between}
+.ctrl-inp{font-family:var(--mono);font-size:.85rem;padding:6px 8px;border:1px solid var(--pencil);border-radius:6px;background:var(--cream);color:var(--charcoal)}
+.ctrl-color{padding:2px;height:34px;width:100%;cursor:pointer}
+.multiplier-box{font-size:.8rem;color:var(--secondary);line-height:1.6;background:var(--cream);padding:10px;border-radius:6px}
+
+/* Polaroid Canvas */
+.polaroid{background:white;padding:12px 12px 16px;border-radius:4px;box-shadow:var(--shadow);width:100%;margin:0 auto}
+.polaroid-inner{aspect-ratio:1;width:100%;overflow:hidden;background:#fdfbf7;border-radius:2px;position:relative}
+.polaroid canvas{width:100%;height:100%;display:block}
+.polaroid-caption{text-align:center;font-family:var(--sans);font-size:.85rem;color:var(--charcoal);margin-top:10px;letter-spacing:.02em}
+
+/* Questions */
+.q-section-title{font-family:var(--serif);font-size:1.6rem;font-weight:700;text-align:center;margin-bottom:1rem}
+.q-subtitle{text-align:center;color:var(--secondary);font-size:.95rem;margin-bottom:2rem;max-width:540px;margin-left:auto;margin-right:auto}
+.q-list{display:flex;flex-direction:column;gap:1.5rem}
+.q-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow);padding:1.25rem 1.5rem;transition:box-shadow var(--transition),transform var(--transition)}
+.q-badge{display:inline-block;font-family:var(--mono);font-size:.7rem;background:var(--amber-light);color:var(--amber);font-weight:700;padding:3px 10px;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:.1em}
+.q-text{font-family:var(--serif);font-size:1.1rem;font-weight:600;margin:.5rem 0 .75rem}
+.q-answer{color:var(--secondary);font-size:.92rem;line-height:1.8}
+.q-answer strong{color:var(--charcoal)}
+
+/* Code blocks */
+.code-block{background:#011627;color:#d6deeb;font-family:var(--mono);font-size:.82rem;padding:1.25rem;border-radius:8px;overflow-x:auto;margin-top:1rem;line-height:1.7;white-space:pre-wrap;word-break:break-all}
+.kw{color:#c792ea}.fn{color:#82aaff}.str{color:#addb67}.num{color:#f78c6c}.cm{color:#637777;font-style:italic}.op{color:#89ddff}
+
+/* Footer */
+.site-footer{text-align:center;padding:1.5rem;color:var(--secondary);font-size:.85rem;border-top:1px solid var(--pencil);margin-top:3rem}
+
+@media(max-width:640px){
+  h1{font-size:2rem}
+  .sandbox-layout{flex-direction:column}
+  .sandbox-canvas{position:static;width:100%}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="/" style="text-decoration:none">
+      <div class="site-logo">⚛️ MAT206</div>
+    </a>
+    <nav class="site-nav"><a href="/">Assignments</a></nav>
+  </div>
+</header>
+
+<div class="col">
+
+  <!-- Title -->
+  <div class="title-block">
+    <span class="label">Assignment 05</span>
+    <h1>Wulff Construction<br>&amp; Equilibrium Crystal Shape</h1>
+    <p class="tagline">How surface energies and broken bonds dictate the macroscopic shape of a crystal.</p>
+  </div>
+
+  <!-- Context -->
+  <div class="callout">
+    <h3>Context</h3>
+    <p>A crystal in vacuum will naturally adopt a shape that minimizes its total surface free energy. The <strong>Wulff Construction</strong> provides a geometric method to find this equilibrium shape. By calculating the surface energy (γ) for every crystallographic direction and drawing planes perpendicular to those directions at a distance proportional to γ, the inner envelope of all those planes defines the equilibrium crystal shape (ECS).</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Step 01 -->
+  <section style="margin-bottom:1rem">
+    <div class="step-header">
+      <span class="step-num">01</span>
+      <h2>Broken-Bond Model</h2>
+    </div>
+    <div class="step-content">
+      <p>In a simple lattice model, the surface energy of a face is proportional to the number of atomic bonds broken to create that face. We consider two types of square lattice coordinations:</p>
+      <ul>
+        <li><strong>4-coord (Nearest Neighbors only):</strong> A horizontal or vertical cut breaks 1 bond per lattice spacing. A diagonal cut breaks √2 bonds per lattice spacing.</li>
+        <li><strong>8-coord (Nearest + Next-Nearest Neighbors):</strong> A straight cut breaks more bonds (3 per lattice spacing), but a diagonal cut breaks a proportionally smaller number (3/√2).</li>
+      </ul>
+      <p style="margin-top:1rem">The user can specify an arbitrary penalty energy for horizontal (E_h), vertical (E_v), and diagonal (E_d) bonds. The distance to the bounding crystal facet is then:</p>
+      <div class="eq-row">
+        <span class="eq">d = m_hv · E_h · S &nbsp; (x-axis bounds)</span>
+        <span class="eq">e = m_hv · E_v · S &nbsp; (y-axis bounds)</span>
+        <span class="eq">r = m_diag · E_d · S &nbsp; (diagonal bounds)</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Step 02 -->
+  <section style="margin-bottom:1rem">
+    <div class="step-header">
+      <span class="step-num">02</span>
+      <h2>The Inner Envelope</h2>
+    </div>
+    <div class="step-content">
+      <p>The distance values (d, e, r) define half-spaces (or allowed "bands"). The crystal exists in the region where <em>all</em> of these spatial inequalities are satisfied simultaneously:</p>
+      <div class="ineq-grid">
+        <div class="ineq-card">
+          <div class="ineq-title">Vertical</div>
+          <div>x ≤ d <br> x ≥ -d</div>
+        </div>
+        <div class="ineq-card">
+          <div class="ineq-title">Horizontal</div>
+          <div>y ≤ e <br> y ≥ -e</div>
+        </div>
+        <div class="ineq-card">
+          <div class="ineq-title">Diagonal 1</div>
+          <div>x + y ≤ r <br> x + y ≥ -r</div>
+        </div>
+        <div class="ineq-card">
+          <div class="ineq-title">Diagonal 2</div>
+          <div>x - y ≤ r <br> x - y ≥ -r</div>
+        </div>
+      </div>
+      <p>The resulting geometric intersection of these 8 inequalities forms a convex polygon known as the equilibrium shape.</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Sandbox -->
+  <section style="margin-bottom:1rem">
+    <div class="step-header">
+      <h2 style="font-family:var(--serif)">Interactive Sandbox</h2>
+    </div>
+    <p class="step-content" style="margin-bottom:1.5rem">Adjust the interfacial energies and coordination numbers below. The crystal shape (solid orange) and the allowed half-spaces (transparent blue bands) update instantly.</p>
+
+    <div class="sandbox-layout">
+      <div class="sandbox-controls">
+        
+        <fieldset class="fieldset">
+          <legend class="legend">💎 Crystal Structure</legend>
+          <label class="ctrl-lbl" style="margin-bottom:1rem">
+            Coordination Type
+            <select id="inp-coord" class="ctrl-inp">
+              <option value="4">4-Coordination (Square)</option>
+              <option value="8" selected>8-Coordination (Square + Diag)</option>
+            </select>
+          </label>
+          <div class="multiplier-box" id="calc-multipliers">
+            Broken-bond multipliers:<br>
+            Hv = <strong>3</strong> · Diag ≈ <strong>2.121</strong>
+          </div>
+        </fieldset>
+
+        <fieldset class="fieldset">
+          <legend class="legend">⚡ Interfacial Energies</legend>
+          <div style="display:flex;flex-direction:column;gap:1.25rem;margin-top:0.5rem">
+            <div>
+              <label class="ctrl-lbl ctrl-lbl-row">
+                <span>Horizontal (E_h)</span>
+                <input type="number" id="inp-eh-num" value="1.0" step="0.1" min="0" class="ctrl-inp" style="width:70px;text-align:right">
+              </label>
+              <input type="range" id="inp-eh-range" min="0" max="5" step="0.1" value="1.0" style="width:100%;accent-color:var(--cyan);margin-top:6px">
+            </div>
+            <div>
+              <label class="ctrl-lbl ctrl-lbl-row">
+                <span>Vertical (E_v)</span>
+                <input type="number" id="inp-ev-num" value="1.0" step="0.1" min="0" class="ctrl-inp" style="width:70px;text-align:right">
+              </label>
+              <input type="range" id="inp-ev-range" min="0" max="5" step="0.1" value="1.0" style="width:100%;accent-color:var(--cyan);margin-top:6px">
+            </div>
+            <div>
+              <label class="ctrl-lbl ctrl-lbl-row">
+                <span>Diagonal (E_d)</span>
+                <input type="number" id="inp-ed-num" value="1.0" step="0.1" min="0" class="ctrl-inp" style="width:70px;text-align:right">
+              </label>
+              <input type="range" id="inp-ed-range" min="0" max="5" step="0.1" value="1.0" style="width:100%;accent-color:var(--cyan);margin-top:6px">
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="fieldset">
+          <legend class="legend">🎨 Visuals</legend>
+          <div class="ctrl-row">
+            <label class="ctrl-lbl">
+              Scale (S)
+              <input type="number" id="inp-s" value="50" step="5" min="10" class="ctrl-inp">
+            </label>
+            <label class="ctrl-lbl">
+              Band Alpha
+              <input type="number" id="inp-alpha" value="0.15" step="0.05" min="0" max="1" class="ctrl-inp">
+            </label>
+            <label class="ctrl-lbl">
+              Band Color
+              <input type="color" id="inp-bccid" value="#4A90E2" class="ctrl-inp ctrl-color">
+            </label>
+            <label class="ctrl-lbl">
+              Wulff Color
+              <input type="color" id="inp-wccid" value="#EBA352" class="ctrl-inp ctrl-color">
+            </label>
+          </div>
+        </fieldset>
+
+      </div>
+
+      <div class="sandbox-canvas">
+        <div class="polaroid">
+          <div class="polaroid-inner" id="canvas-container">
+            <canvas id="wulff-canvas"></canvas>
+          </div>
+          <div class="polaroid-caption">Equilibrium Crystal Shape (Wulff Construction)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Questions -->
+  <section>
+    <h2 class="q-section-title">🔬 Exploration Questions</h2>
+    <p class="q-subtitle">Use the sandbox above to probe how thermodynamic variables shape the crystal.</p>
+
+    <div class="q-list">
+
+      <div class="q-card">
+        <span class="q-badge">Question 1</span>
+        <p class="q-text">Do 4 and 8 coordination have the same shape? If not, why?</p>
+        <div class="q-answer">
+          <p>No, they have different shapes (assuming identical generic energy inputs like 1.0). In 4-coordination, the diagonal cuts break relatively more bonds (m_diag ≈ 1.414 vs m_hv = 1). Because diagonals cost more energy, they get "pushed" further out from the origin, leaving a square shape dominated by horizontal and vertical facets.</p>
+          <p style="margin-top:0.75rem">In 8-coordination, the penalty ratio flips (m_hv = 3 vs m_diag ≈ 2.12). The diagonal facets become relatively cheaper to form, so they sit closer to the origin, carving off the corners of the square and creating an octagon.</p>
+        </div>
+      </div>
+
+      <div class="q-card">
+        <span class="q-badge">Question 2</span>
+        <p class="q-text">For E_h = E_v = E_d, why does the shape still not become a perfect circle?</p>
+        <div class="q-answer"><p>The Wulff construction draws <em>flat planes</em> perpendicular to defined crystallographic vectors. We are only evaluating three discrete sets of planes (horizontal, vertical, and 45-degree diagonal). Thus we get an intersection of straight lines (a polygon), not a continuous set of tangent lines from all possible angles. A true circle requires evaluating an infinite number of crystal orientations.</p></div>
+      </div>
+
+      <div class="q-card">
+        <span class="q-badge">Question 3</span>
+        <p class="q-text">What happens if you give a very big energy to one type of interface?</p>
+        <div class="q-answer"><p>If you give a very high energy to, say, E_d (the diagonal planes), the distance r becomes very large. The diagonal bands map so far away from the origin that they no longer intersect the inner envelope formed by the horizontal and vertical planes. That specific facet "grows out" of existence, and you get a perfect square.</p></div>
+      </div>
+
+      <div class="q-card">
+        <span class="q-badge">Question 4</span>
+        <p class="q-text">Does lowering energy increase or decrease the presence of a specific direction?</p>
+        <div class="q-answer"><p>Lowering the energy of a specific direction means the distance vector for that facet becomes shorter (it moves <em>closer</em> to the origin). Because the crystal shape is defined by the <em>inner</em> envelope, planes that are closer to the origin cut off the planes that are further away. Therefore, lowering the energy <strong>increases</strong> the presence (surface area) of that specific facet in the final equilibrium shape.</p></div>
+      </div>
+
+      <div class="q-card">
+        <span class="q-badge">Question 5</span>
+        <p class="q-text">Does increasing an interfacial energy make that orientation more or less favorable in the final equilibrium shape?</p>
+        <div class="q-answer"><p>Increasing the energy makes the orientation <strong>less favorable</strong>. The distance to that plane grows, pushing it outward. If the energy is increased enough, the plane will be entirely superseded by other, lower-energy planes and will disappear completely from the crystal habit.</p></div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Code Blocks -->
+  <section style="margin-bottom:1rem">
+    <div class="step-header">
+      <span class="step-num">03</span>
+      <h2>Under the Hood: Polygon Intersection</h2>
+    </div>
+    <div class="step-content">
+      <p>Drawing the semi-transparent allowed bands is trivial. But drawing the solid inner "Wulff shape" requires finding the geometric intersection of 8 distinct half-spaces. The simplest algorithm in 2D space is to find all O(N²) hyper-plane intersections, and simply filter out any point that violates any inequality:</p>
+      
+      <div class="code-block"><span class="cm">// 1. Find all pair-wise line intersections (8C2 = 28 points)</span>
+<span class="kw">const</span> points <span class="op">=</span> [];
+<span class="kw">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="num">0</span>; i <span class="op">&lt;</span> lines.length; i<span class="op">++</span>) {
+    <span class="kw">for</span> (<span class="kw">let</span> j <span class="op">=</span> i <span class="op">+</span> <span class="num">1</span>; j <span class="op">&lt;</span> lines.length; j<span class="op">++</span>) {
+        <span class="kw">const</span> pt <span class="op">=</span> <span class="fn">getIntersection</span>(lines[i], lines[j]);
+        <span class="kw">if</span> (pt) points.<span class="fn">push</span>(pt);
+    }
+}
+
+<span class="cm">// 2. Filter: Keep only points satisfying ALL 8 inequalities</span>
+<span class="kw">const</span> validPoints <span class="op">=</span> points.<span class="fn">filter</span>(pt =&gt; {
+    <span class="kw">for</span> (<span class="kw">const</span> ineq <span class="kw">of</span> inequalities) {
+        <span class="kw">if</span> (<span class="op">!</span><span class="fn">satisfiesInequality</span>(pt, ineq)) <span class="kw">return</span> <span class="kw">false</span>;
+    }
+    <span class="kw">return</span> <span class="kw">true</span>;
+});
+
+<span class="cm">// 3. Sort points radially to draw a convex polygon</span>
+validPoints.<span class="fn">sort</span>((a, b) =&gt; Math.<span class="fn">atan2</span>(a.y, a.x) <span class="op">-</span> Math.<span class="fn">atan2</span>(b.y, b.x));
+
+<span class="cm">// 4. Draw!</span>
+ctx.<span class="fn">beginPath</span>();
+validPoints.<span class="fn">forEach</span>((pt, i) =&gt; i<span class="op">===</span><span class="num">0</span> ? ctx.<span class="fn">moveTo</span>(pt.x, pt.y) : ctx.<span class="fn">lineTo</span>(pt.x, pt.y));
+ctx.<span class="fn">fill</span>();</div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="site-footer">MAT206 — Kinetics of Materials · Spring 2026</footer>
+
+<script>
+(function(){
+"use strict";
+
+// ── DOM Elements ──────────────────────────────────────────────────────────
+const g = id => document.getElementById(id);
+const gn = id => Number(g(id).value);
+const gs = id => g(id).value;
+
+const inpCoord = g("inp-coord");
+const inpEhNum = g("inp-eh-num"), inpEhRange = g("inp-eh-range");
+const inpEvNum = g("inp-ev-num"), inpEvRange = g("inp-ev-range");
+const inpEdNum = g("inp-ed-num"), inpEdRange = g("inp-ed-range");
+const inpS = g("inp-s"), inpAlpha = g("inp-alpha");
+const inpBandColor = g("inp-bccid"), inpWulffColor = g("inp-wccid");
+const calcMultipliers = g("calc-multipliers");
+
+const canvas = g("wulff-canvas");
+const ctx = canvas.getContext("2d");
+const container = g("canvas-container");
+
+// ── Math Helpers ──────────────────────────────────────────────────────────
+function getIntersection(l1, l2) {
+    const det = l1.A * l2.B - l2.A * l1.B;
+    if (Math.abs(det) < 1e-9) return null; // parallel
+    const x = (l2.B * l1.C - l1.B * l2.C) / det;
+    const y = (l1.A * l2.C - l2.A * l1.C) / det;
+    return { x, y };
+}
+
+function satisfiesInequality(pt, ineq, eps = 1e-7) {
+    if (!pt) return false;
+    return (ineq.A * pt.x + ineq.B * pt.y) <= ineq.C + eps;
+}
+
+function hexToRgba(hexClean, a) {
+    const hex = hexClean.replace("#", "");
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return `rgba(${r},${g},${b},${a})`;
+}
+
+// ── Synchronize Slider/Number Inputs ──────────────────────────────────────
+function syncInput(source, target) {
+    source.addEventListener("input", (e) => {
+        target.value = e.target.value;
+        draw();
+    });
+}
+syncInput(inpEhNum, inpEhRange); syncInput(inpEhRange, inpEhNum);
+syncInput(inpEvNum, inpEvRange); syncInput(inpEvRange, inpEvNum);
+syncInput(inpEdNum, inpEdRange); syncInput(inpEdRange, inpEdNum);
+
+// ── Drawing Logic ─────────────────────────────────────────────────────────
+
+function resize() {
+    const size = Math.min(container.clientWidth, window.innerHeight * 0.75, 700);
+    canvas.width = size;
+    canvas.height = size;
+    draw();
+}
+
+function draw() {
+    const W = canvas.width;
+    const H = canvas.height;
+    if (W === 0 || H === 0) return;
+    const cx = W / 2;
+    const cy = H / 2;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // 1. Grid
+    ctx.strokeStyle = "rgba(136, 119, 99, 0.1)";
+    ctx.lineWidth = 1;
+    const gridStep = 20;
+    ctx.beginPath();
+    for (let x = cx % gridStep; x < W; x += gridStep) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+    for (let y = cy % gridStep; y < H; y += gridStep) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+    ctx.stroke();
+
+    // 2. Axes
+    ctx.strokeStyle = "rgba(44, 48, 58, 0.4)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, cy); ctx.lineTo(W, cy);
+    ctx.moveTo(cx, 0); ctx.lineTo(cx, H);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(44, 48, 58, 0.6)";
+    ctx.font = "12px var(--mono)";
+    ctx.fillText("(0,0)", cx + 5, cy + 15);
+
+    // 3. Physics Math
+    const coord = gs("inp-coord");
+    let m_hv = 1;
+    let m_diag = Math.sqrt(2);
+    if (coord === "8") {
+        m_hv = 3;
+        m_diag = 3 / Math.sqrt(2);
+    }
+    
+    // Update multiplier UI
+    calcMultipliers.innerHTML = `Broken-bond multipliers:<br>Hv = <strong>${m_hv}</strong> · Diag ≈ <strong>${m_diag.toFixed(3)}</strong>`;
+
+    const eh = gn("inp-eh-num");
+    const ev = gn("inp-ev-num");
+    const ed = gn("inp-ed-num");
+    const S = gn("inp-s");
+
+    const d = m_hv * eh * S;
+    const e = m_hv * ev * S;
+    const r = m_diag * ed * S;
+
+    const fillColor = hexToRgba(gs("inp-bccid"), gn("inp-alpha"));
+    ctx.fillStyle = fillColor;
+
+    // 4. Draw Allowed Bands
+    
+    // Vert: -d <= x <= d
+    ctx.beginPath();
+    ctx.rect(cx - d, 0, 2 * d, H);
+    ctx.fill();
+
+    // Horiz: -e <= y <= e
+    ctx.beginPath();
+    ctx.rect(0, cy - e, W, 2 * e);
+    ctx.fill();
+
+    // Diag 1 (x + y <= r & x + y >= -r)
+    ctx.beginPath();
+    ctx.moveTo(0, cy + cx - r);
+    ctx.lineTo(W, cy + cx - W - r);
+    ctx.lineTo(W, cy + cx - W + r);
+    ctx.lineTo(0, cy + cx + r);
+    ctx.closePath();
+    ctx.fill();
+
+    // Diag 2 (x - y <= r & x - y >= -r)
+    ctx.beginPath();
+    ctx.moveTo(0, cy + cx + r); // y = x + r => canvas Y = cy - X_math + cx + r 
+    ctx.lineTo(W, cy - W + cx + r);
+    ctx.lineTo(W, cy - W + cx - r);
+    ctx.lineTo(0, cy + cx - r);
+    ctx.closePath();
+    ctx.fill();
+
+    // 5. Wulff intersection logic
+    const lines = [
+        { A: 1,  B: 0,  C: d },
+        { A: -1, B: 0,  C: d },
+        { A: 0,  B: 1,  C: e },
+        { A: 0,  B: -1, C: e },
+        { A: 1,  B: 1,  C: r },
+        { A: -1, B: -1, C: r },
+        { A: 1,  B: -1, C: r },
+        { A: -1, B: 1,  C: r },
+    ];
+    const inequalities = [...lines];
+
+    const points = [];
+    for (let i = 0; i < lines.length; i++) {
+        for (let j = i + 1; j < lines.length; j++) {
+            const pt = getIntersection(lines[i], lines[j]);
+            if (pt) points.push(pt);
+        }
+    }
+
+    const validPoints = points.filter(pt => {
+        for (const ineq of inequalities) {
+            if (!satisfiesInequality(pt, ineq)) return false;
+        }
+        return true;
+    });
+
+    const uniquePoints = [];
+    for (const pt of validPoints) {
+        const isDup = uniquePoints.some(upt => Math.abs(upt.x - pt.x) < 1e-5 && Math.abs(upt.y - pt.y) < 1e-5);
+        if (!isDup) uniquePoints.push(pt);
+    }
+
+    uniquePoints.sort((a, b) => Math.atan2(a.y, a.x) - Math.atan2(b.y, b.x));
+
+    // 6. Draw Wulff Shape
+    if (uniquePoints.length > 2) {
+        ctx.fillStyle = gs("inp-wccid");
+        ctx.strokeStyle = "rgba(44, 48, 58, 0.9)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        
+        for (let i = 0; i < uniquePoints.length; i++) {
+            const pt = uniquePoints[i];
+            const cx_pt = cx + pt.x;
+            const cy_pt = cy - pt.y;
+            
+            if (i === 0) ctx.moveTo(cx_pt, cy_pt);
+            else ctx.lineTo(cx_pt, cy_pt);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    }
+}
+
+// ── Event Listeners ───────────────────────────────────────────────────────
+[inpCoord, inpS, inpAlpha, inpBandColor, inpWulffColor].forEach(el => el.addEventListener("input", draw));
+
+window.addEventListener("resize", resize);
+
+// Init
+resize();
+
+})();
+</script>
+</body>
+</html>
