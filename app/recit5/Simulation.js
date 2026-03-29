@@ -260,19 +260,19 @@ export default function WulffSimulation() {
                     <legend style={legendStyle}>⚡ Interfacial Energies</legend>
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                         <label style={{ ...lblStyle, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                            <span>Horizontal (E_h)</span>
+                            <span>Horizontal (E<sub>h</sub>)</span>
                             <input type="number" step="0.1" min="0" value={eh} onChange={e => setEh(Number(e.target.value))} style={{ ...inputStyle, width: "100px", textAlign: "right" }} />
                         </label>
                         <input type="range" min="0" max="5" step="0.1" value={eh} onChange={e => setEh(Number(e.target.value))} style={{ accentColor: "var(--color-cyan)" }} />
 
                         <label style={{ ...lblStyle, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                            <span>Vertical (E_v)</span>
+                            <span>Vertical (E<sub>v</sub>)</span>
                             <input type="number" step="0.1" min="0" value={ev} onChange={e => setEv(Number(e.target.value))} style={{ ...inputStyle, width: "100px", textAlign: "right" }} />
                         </label>
                         <input type="range" min="0" max="5" step="0.1" value={ev} onChange={e => setEv(Number(e.target.value))} style={{ accentColor: "var(--color-cyan)" }} />
 
                         <label style={{ ...lblStyle, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                            <span>Diagonal (E_d)</span>
+                            <span>Diagonal (E<sub>d</sub>)</span>
                             <input type="number" step="0.1" min="0" value={ed} onChange={e => setEd(Number(e.target.value))} style={{ ...inputStyle, width: "100px", textAlign: "right" }} />
                         </label>
                         <input type="range" min="0" max="5" step="0.1" value={ed} onChange={e => setEd(Number(e.target.value))} style={{ accentColor: "var(--color-cyan)" }} />

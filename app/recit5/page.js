@@ -1,5 +1,6 @@
 import WulffSimulation from "./Simulation";
 import CodeBlock from "./CodeBlock";
+import Latex from "./Latex";
 
 export const metadata = {
     title: "Week 5: Wulff Construction — MAT206",
@@ -30,8 +31,8 @@ export default function Recit5Page() {
                 <p>
                     A crystal in vacuum will naturally adopt a shape that minimizes its total surface free energy. 
                     The <strong>Wulff Construction</strong> provides a geometric method to find this equilibrium shape. 
-                    By calculating the surface energy ($\gamma$) for every crystallographic direction and drawing 
-                    planes perpendicular to those directions at a distance proportional to $\gamma$, the inner envelope 
+                    By calculating the surface energy (<Latex>{"\\gamma"}</Latex>) for every crystallographic direction and drawing 
+                    planes perpendicular to those directions at a distance proportional to <Latex>{"\\gamma"}</Latex>, the inner envelope 
                     of all those planes defines the equilibrium crystal shape (ECS).
                 </p>
             </div>
@@ -53,22 +54,22 @@ export default function Recit5Page() {
                     <ul style={{ paddingLeft: "1.5rem", lineHeight: 2, marginTop: "0.75rem" }}>
                         <li>
                             <strong>4-coord (Nearest Neighbors only):</strong> A horizontal or vertical cut breaks 
-                            1 bond per lattice spacing. A diagonal cut breaks $\sqrt{2}$ bonds per lattice spacing.
+                            1 bond per lattice spacing. A diagonal cut breaks <Latex>{"\\sqrt{2}"}</Latex> bonds per lattice spacing.
                         </li>
                         <li>
                             <strong>8-coord (Nearest + Next-Nearest Neighbors):</strong> A straight cut breaks more 
                             bonds (3 per lattice spacing), but a diagonal cut breaks a proportionally smaller number 
-                            ($3/\sqrt{2}$).
+                            (<Latex>{"3/\\sqrt{2}"}</Latex>).
                         </li>
                     </ul>
                     <p style={{ marginTop: "1rem" }}>
-                        The user can specify an arbitrary penalty energy for horizontal ($E_h$), vertical ($E_v$), 
-                        and diagonal ($E_d$) bonds. The distance to the bounding crystal facet is then:
+                        The user can specify an arbitrary penalty energy for horizontal (<Latex>{"E_h"}</Latex>), vertical (<Latex>{"E_v"}</Latex>), 
+                        and diagonal (<Latex>{"E_d"}</Latex>) bonds. The distance to the bounding crystal facet is then:
                     </p>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", alignItems: "center", margin: "1.5rem 0" }}>
-                        <span className="equation-pill">{"$d = m_{hv} \\cdot E_h \\cdot S$"} &nbsp; (x-axis bounds)</span>
-                        <span className="equation-pill">{"$e = m_{hv} \\cdot E_v \\cdot S$"} &nbsp; (y-axis bounds)</span>
-                        <span className="equation-pill">{"$r = m_{diag} \\cdot E_d \\cdot S$"} &nbsp; (diagonal bounds)</span>
+                        <span className="equation-pill"><Latex>{"d = m_{hv} \\cdot E_h \\cdot S"}</Latex> &nbsp; (x-axis bounds)</span>
+                        <span className="equation-pill"><Latex>{"e = m_{hv} \\cdot E_v \\cdot S"}</Latex> &nbsp; (y-axis bounds)</span>
+                        <span className="equation-pill"><Latex>{"r = m_{diag} \\cdot E_d \\cdot S"}</Latex> &nbsp; (diagonal bounds)</span>
                     </div>
                 </div>
             </section>
@@ -83,25 +84,25 @@ export default function Recit5Page() {
                 </div>
                 <div className="step-content">
                     <p>
-                        The distance values ($d, e, r$) define half-spaces (or allowed "bands"). The crystal exists 
+                        The distance values (<Latex>{"d, e, r"}</Latex>) define half-spaces (or allowed "bands"). The crystal exists 
                         in the region where <em>all</em> of these spatial inequalities are satisfied simultaneously:
                     </p>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", margin: "1.5rem 0" }}>
                         <div style={{ background: "var(--color-card)", padding: "1rem", borderRadius: "10px", boxShadow: "var(--shadow-soft)", textAlign: "center" }}>
                             <div style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--color-amber)", marginBottom: "4px" }}>Vertical</div>
-                            <div>$x \le d$ <br/> $x \ge -d$</div>
+                            <div><Latex>{"x \\le d"}</Latex> <br/> <Latex>{"x \\ge -d"}</Latex></div>
                         </div>
                         <div style={{ background: "var(--color-card)", padding: "1rem", borderRadius: "10px", boxShadow: "var(--shadow-soft)", textAlign: "center" }}>
                             <div style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--color-amber)", marginBottom: "4px" }}>Horizontal</div>
-                            <div>$y \le e$ <br/> $y \ge -e$</div>
+                            <div><Latex>{"y \\le e"}</Latex> <br/> <Latex>{"y \\ge -e"}</Latex></div>
                         </div>
                         <div style={{ background: "var(--color-card)", padding: "1rem", borderRadius: "10px", boxShadow: "var(--shadow-soft)", textAlign: "center" }}>
                             <div style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--color-amber)", marginBottom: "4px" }}>Diagonal 1</div>
-                            <div>$x + y \le r$ <br/> $x + y \ge -r$</div>
+                            <div><Latex>{"x + y \\le r"}</Latex> <br/> <Latex>{"x + y \\ge -r"}</Latex></div>
                         </div>
                         <div style={{ background: "var(--color-card)", padding: "1rem", borderRadius: "10px", boxShadow: "var(--shadow-soft)", textAlign: "center" }}>
                             <div style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--color-amber)", marginBottom: "4px" }}>Diagonal 2</div>
-                            <div>$x - y \le r$ <br/> $x - y \ge -r$</div>
+                            <div><Latex>{"x - y \\le r"}</Latex> <br/> <Latex>{"x - y \\ge -r"}</Latex></div>
                         </div>
                     </div>
                     <p>
@@ -141,16 +142,16 @@ export default function Recit5Page() {
                         <span className="q-badge">Question 1</span>
                         <p className="q-text">Do 4 and 8 coordination have the same shape? If not, why?</p>
                         <div className="q-answer">
-                            <p>No, they have different shapes (assuming identical generic energy inputs like 1.0). In 4-coordination, the diagonal cuts break relatively more bonds ({"$m_{diag} \\approx 1.414$"} vs {"$m_{hv} = 1$"}). Because diagonals cost more energy, they get "pushed" further out from the origin, leaving a square shape dominated by horizontal and vertical facets.</p>
-                            <p style={{ marginTop: "0.75rem" }}>In 8-coordination, the penalty ratio flips ({"$m_{hv} = 3$"} vs {"$m_{diag} \\approx 2.12$"}). The diagonal facets become relatively cheaper to form, so they sit closer to the origin, carving off the corners of the square and creating an octagon.</p>
+                            <p>No, they have different shapes (assuming identical generic energy inputs like 1.0). In 4-coordination, the diagonal cuts break relatively more bonds (<Latex>{"m_{diag} \\approx 1.414"}</Latex> vs <Latex>{"m_{hv} = 1"}</Latex>). Because diagonals cost more energy, they get "pushed" further out from the origin, leaving a square shape dominated by horizontal and vertical facets.</p>
+                            <p style={{ marginTop: "0.75rem" }}>In 8-coordination, the penalty ratio flips (<Latex>{"m_{hv} = 3"}</Latex> vs <Latex>{"m_{diag} \\approx 2.12"}</Latex>). The diagonal facets become relatively cheaper to form, so they sit closer to the origin, carving off the corners of the square and creating an octagon.</p>
                         </div>
                     </div>
 
                     <div className="question-card">
                         <span className="q-badge">Question 2</span>
-                        <p className="q-text">For E_h = E_v = E_d, why does the shape still not become a perfect circle?</p>
+                        <p className="q-text">For E<sub>h</sub> = E<sub>v</sub> = E<sub>d</sub>, why does the shape still not become a perfect circle?</p>
                         <div className="q-answer">
-                            <p>The Wulff construction draws *flat planes* perpendicular to defined crystallographic vectors. We are only evaluating three discrete sets of planes (horizontal, vertical, and 45-degree diagonal). Thus we get an intersection of straight lines (a polygon), not a continuous set of tangent lines from all possible angles. A true circle requires evaluating an infinite number of crystal orientations.</p>
+                            <p>The Wulff construction draws <em>flat planes</em> perpendicular to defined crystallographic vectors. We are only evaluating three discrete sets of planes (horizontal, vertical, and 45-degree diagonal). Thus we get an intersection of straight lines (a polygon), not a continuous set of tangent lines from all possible angles. A true circle requires evaluating an infinite number of crystal orientations.</p>
                         </div>
                     </div>
 
@@ -158,7 +159,7 @@ export default function Recit5Page() {
                         <span className="q-badge">Question 3</span>
                         <p className="q-text">What happens if you give a very big energy to one type of interface?</p>
                         <div className="q-answer">
-                            <p>If you give a very high energy to, say, $E_d$ (the diagonal planes), the distance $r$ becomes very large. The diagonal bands map so far away from the origin that they no longer intersect the inner envelope formed by the horizontal and vertical planes. That specific facet "grows out" of existence, and you get a perfect square.</p>
+                            <p>If you give a very high energy to, say, <Latex>{"E_d"}</Latex> (the diagonal planes), the distance <Latex>{"r"}</Latex> becomes very large. The diagonal bands map so far away from the origin that they no longer intersect the inner envelope formed by the horizontal and vertical planes. That specific facet "grows out" of existence, and you get a perfect square.</p>
                         </div>
                     </div>
 
@@ -166,7 +167,7 @@ export default function Recit5Page() {
                         <span className="q-badge">Question 4</span>
                         <p className="q-text">Does lowering energy increase or decrease the presence of a specific direction?</p>
                         <div className="q-answer">
-                            <p>Lowering the energy of a specific direction means the distance vector for that facet becomes shorter (it moves *closer* to the origin). Because the crystal shape is defined by the *inner* envelope, planes that are closer to the origin cut off the planes that are further away. Therefore, lowering the energy **increases** the presence (surface area) of that specific facet in the final equilibrium shape.</p>
+                            <p>Lowering the energy of a specific direction means the distance vector for that facet becomes shorter (it moves <em>closer</em> to the origin). Because the crystal shape is defined by the <em>inner</em> envelope, planes that are closer to the origin cut off the planes that are further away. Therefore, lowering the energy <strong>increases</strong> the presence (surface area) of that specific facet in the final equilibrium shape.</p>
                         </div>
                     </div>
 
@@ -174,7 +175,7 @@ export default function Recit5Page() {
                         <span className="q-badge">Question 5</span>
                         <p className="q-text">Does increasing an interfacial energy make that orientation more or less favorable in the final equilibrium shape?</p>
                         <div className="q-answer">
-                            <p>Increasing the energy makes the orientation **less favorable**. The distance to that plane grows, pushing it outward. If the energy is increased enough, the plane will be entirely superseded by other, lower-energy planes and will disappear completely from the crystal habit.</p>
+                            <p>Increasing the energy makes the orientation <strong>less favorable</strong>. The distance to that plane grows, pushing it outward. If the energy is increased enough, the plane will be entirely superseded by other, lower-energy planes and will disappear completely from the crystal habit.</p>
                         </div>
                     </div>
 
@@ -193,7 +194,7 @@ export default function Recit5Page() {
                     <p>
                         Drawing the semi-transparent allowed bands is trivial. But drawing the solid inner "Wulff shape" 
                         requires finding the geometric intersection of 8 distinct half-spaces. The simplest algorithm 
-                        in 2D space is to find all $O(N^2)$ hyper-plane intersections, and simply filter out any 
+                        in 2D space is to find all <Latex>{"O(N^2)"}</Latex> hyper-plane intersections, and simply filter out any 
                         point that violates any inequality:
                     </p>
                     <CodeBlock code={`// 1. Find all pair-wise line intersections (8C2 = 28 points)
