@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Week 6: Monte Carlo Grain Growth — MAT206</title>
+<meta name="description" content="Simulate 2D grain growth using a Monte Carlo lattice model with curvature-driven boundary migration and Glauber kinetics."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--cream:#FDFBF7;--charcoal:#2C303A;--amber:#EBA352;--amber-light:rgba(235,163,82,0.12);--cyan:#4A90E2;--pencil:#E1E2E6;--card:#FFFFFF;--secondary:#887763;--serif:'Lora',Georgia,serif;--sans:'Inter',-apple-system,sans-serif;--mono:'Fira Code','Courier New',monospace;--radius-sm:0.5rem;--radius-md:1rem;--radius-pill:9999px;--shadow:2px 4px 12px -2px rgba(44,48,58,.08);--shadow-hover:4px 8px 20px -4px rgba(44,48,58,.14);--transition:.3s ease-in-out}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:var(--sans);color:var(--charcoal);background:var(--cream);background-image:radial-gradient(rgba(136,119,99,.06) 1px,transparent 1px);background-size:24px 24px;line-height:1.6;min-height:100vh}
+a{color:var(--cyan);text-decoration:none}
+
+.site-header{position:sticky;top:0;z-index:100;background:rgba(253,251,247,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--pencil)}
+.site-header-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.5rem}
+.site-logo{display:flex;align-items:center;gap:.5rem;font-family:var(--serif);font-weight:700;font-size:1rem;color:var(--charcoal)}
+.site-nav a{font-size:.85rem;font-weight:600;color:var(--secondary);border-bottom:2px solid var(--amber);padding-bottom:2px}
+.col{max-width:900px;margin:0 auto;padding:3rem 1.5rem 4rem}
+.label{display:inline-block;font-family:var(--mono);font-size:.7rem;background:var(--amber-light);color:var(--amber);font-weight:700;padding:4px 14px;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:.15em;margin-bottom:1rem}
+h1{font-family:var(--serif);font-size:2.5rem;font-weight:700;line-height:1.2;margin-bottom:.5rem}
+.tagline{color:var(--secondary);font-size:1.05rem;font-style:italic;margin-top:.5rem;margin-bottom:2rem}
+.title-block{text-align:center;margin-bottom:2rem}
+.callout{background:var(--card);border-radius:var(--radius-md);padding:1.5rem;box-shadow:var(--shadow);border-left:4px solid var(--amber);margin-bottom:2rem}
+.callout h3{font-family:var(--serif);font-size:1.1rem;margin-bottom:.5rem;color:var(--amber)}
+.callout p{color:var(--secondary);font-size:.95rem;line-height:1.8}
+.divider{width:100%;height:20px;margin:2rem 0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 20'%3E%3Cpath d='M0 10 Q 15 0 30 10 T 60 10 T 90 10 T 120 10 T 150 10 T 180 10 T 210 10 T 240 10 T 270 10 T 300 10 T 330 10 T 360 10 T 390 10 T 420 10 T 450 10 T 480 10 T 510 10 T 540 10 T 570 10 T 600 10' fill='none' stroke='%23E1E2E6' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:repeat-x;background-size:600px 20px}
+.step-header{display:flex;align-items:baseline;gap:1rem;margin-bottom:1rem}
+.step-num{font-family:var(--mono);font-size:.85rem;font-weight:700;color:var(--amber);background:var(--amber-light);padding:4px 12px;border-radius:var(--radius-pill);flex-shrink:0}
+.step-header h2{font-family:var(--serif);font-size:1.35rem;font-weight:700}
+.step-content{color:var(--secondary);font-size:.95rem;line-height:1.8}
+.step-content p{margin-bottom:.75rem}
+.step-content ul,.step-content ol{padding-left:1.5rem;line-height:2}
+.step-content strong{color:var(--charcoal)}
+.eq{display:inline-block;font-family:var(--mono);font-size:.95rem;background:var(--card);padding:12px 24px;border-radius:var(--radius-md);box-shadow:var(--shadow);font-weight:600;letter-spacing:.02em}
+.eq-row{display:flex;flex-direction:column;gap:.75rem;align-items:center;margin:1.5rem 0}
+
+/* Sandbox Layout */
+.sandbox-layout{display:flex;flex-wrap:wrap;gap:1.5rem;align-items:flex-start}
+.sandbox-controls{flex:1 1 280px;min-width:260;max-width:340px}
+.sandbox-canvas-wrap{flex:1 1 500px;min-width:300px;position:sticky;top:2rem}
+.fieldset{border:1px solid var(--pencil);border-radius:var(--radius-md);padding:1.25rem;background:white;box-shadow:0 2px 8px rgba(0,0,0,.04);margin-bottom:1rem}
+.legend{font:700 .8rem var(--sans);color:var(--amber);padding:0 6px;text-transform:uppercase;letter-spacing:.06em}
+.ctrl-row{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+.ctrl-lbl{display:flex;flex-direction:column;gap:4px;font-size:.72rem;font-weight:700;color:var(--secondary);text-transform:uppercase;letter-spacing:.05em}
+.ctrl-inp{font-family:var(--mono);font-size:.85rem;padding:6px 8px;border:1px solid var(--pencil);border-radius:6px;background:var(--cream);color:var(--charcoal)}
+.btn{font-family:var(--mono);font-size:.8rem;font-weight:700;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--amber);color:white}
+.btn-danger{background:#E06C75;color:white}
+.btn-secondary{background:var(--cream);color:var(--charcoal);border:1px solid var(--pencil)}
+.btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-hover)}
+.stat-line{font-size:.82rem;color:var(--secondary);line-height:2}
+.stat-line strong{color:var(--charcoal)}
+
+/* Canvas Polaroid */
+.polaroid{background:white;padding:12px 12px 16px;border-radius:4px;box-shadow:var(--shadow);width:100%;margin:0 auto}
+.polaroid-inner{width:100%;overflow:hidden;background:#1E222A;border-radius:2px}
+.polaroid-caption{text-align:center;font-family:var(--sans);font-size:.85rem;color:var(--charcoal);margin-top:10px;letter-spacing:.02em}
+
+/* Questions */
+.q-section-title{font-family:var(--serif);font-size:1.6rem;font-weight:700;text-align:center;margin-bottom:1rem}
+.q-subtitle{text-align:center;color:var(--secondary);font-size:.95rem;margin-bottom:2rem;max-width:540px;margin-left:auto;margin-right:auto}
+.q-list{display:flex;flex-direction:column;gap:1.5rem}
+.q-card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow);padding:1.25rem 1.5rem;transition:box-shadow var(--transition),transform var(--transition)}
+.q-badge{display:inline-block;font-family:var(--mono);font-size:.7rem;background:var(--amber-light);color:var(--amber);font-weight:700;padding:3px 10px;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:.1em}
+.q-text{font-family:var(--serif);font-size:1.1rem;font-weight:600;margin:.5rem 0 .75rem}
+.q-answer{color:var(--secondary);font-size:.92rem;line-height:1.8}
+.q-answer strong{color:var(--charcoal)}
+
+/* Code */
+.code-block{background:#011627;color:#d6deeb;font-family:var(--mono);font-size:.82rem;padding:1.25rem;border-radius:8px;overflow-x:auto;margin-top:1rem;line-height:1.7;white-space:pre-wrap;word-break:break-all}
+.kw{color:#c792ea}.fn{color:#82aaff}.str{color:#addb67}.num{color:#f78c6c}.cm{color:#637777;font-style:italic}.op{color:#89ddff}
+
+.site-footer{text-align:center;padding:1.5rem;color:var(--secondary);font-size:.85rem;border-top:1px solid var(--pencil);margin-top:3rem}
+
+@media(max-width:700px){
+  h1{font-size:2rem}
+  .sandbox-layout{flex-direction:column}
+  .sandbox-canvas-wrap{position:static;width:100%}
+  .sandbox-controls{max-width:100%}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a href="/" style="text-decoration:none"><div class="site-logo">⚛️ MAT206</div></a>
+    <nav class="site-nav"><a href="/">Assignments</a></nav>
+  </div>
+</header>
+
+<div class="col">
+
+  <div class="title-block">
+    <span class="label">Assignment 06</span>
+    <h1>Monte Carlo<br>Grain Growth</h1>
+    <p class="tagline">How curvature-driven boundary migration makes small grains vanish and large grains dominate.</p>
+  </div>
+
+  <div class="callout">
+    <h3>Context</h3>
+    <p>Polycrystalline materials consist of many small crystallites (&ldquo;grains&rdquo;) separated by grain boundaries. Over time, the system reduces its total boundary energy by migrating these boundaries &mdash; small, highly-curved grains shrink and are eventually consumed by their larger neighbors. This process is called <strong>grain growth</strong> and can be simulated with a Monte Carlo lattice model using Glauber kinetics.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <section style="margin-bottom:1rem">
+    <div class="step-header"><span class="step-num">01</span><h2>The Lattice Model</h2></div>
+    <div class="step-content">
+      <p>Each cell in a 2D grid is assigned a discrete <strong>orientation</strong> (1 of 3 or 6 possible values). Cells sharing the same orientation belong to the same grain. We use an <strong>8-neighbor Moore neighborhood</strong> with <strong>periodic boundary conditions</strong> (the grid wraps around like a torus).</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section style="margin-bottom:1rem">
+    <div class="step-header"><span class="step-num">02</span><h2>Energy &amp; Glauber Acceptance</h2></div>
+    <div class="step-content">
+      <div class="eq-row">
+        <span class="eq">E<sub>cell</sub> = &Sigma; (E<sub>bulk</sub> if same, E<sub>grain</sub> if different)</span>
+        <span class="eq">&Delta;E = E<sub>final</sub> &minus; E<sub>initial</sub></span>
+        <span class="eq">P<sub>accept</sub> = 1 / (1 + exp(&Delta;E / T))</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section style="margin-bottom:1rem">
+    <div class="step-header"><span class="step-num">03</span><h2>MC Trial Logic</h2></div>
+    <div class="step-content">
+      <ol>
+        <li>Pick a random cell.</li>
+        <li>Examine its 8 neighbors (periodic wrapping).</li>
+        <li><strong>Optimization:</strong> If all 8 neighbors match &rarr; skip immediately.</li>
+        <li>Build an <strong>invasion pool</strong> of different neighbor orientations.</li>
+        <li>Randomly choose one invading orientation.</li>
+        <li>Compute &Delta;E and apply the Glauber criterion.</li>
+      </ol>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Sandbox -->
+  <section style="margin-bottom:1rem">
+    <div class="step-header"><h2 style="font-family:var(--serif)">Interactive Sandbox</h2></div>
+    <p class="step-content" style="margin-bottom:1.5rem">Use <strong>Regenerate</strong> for Voronoi-seeded large domains, or <strong>Mix</strong> for random tiny grains. Click any cell to cycle its orientation.</p>
+
+    <div class="sandbox-layout">
+      <div class="sandbox-controls">
+
+        <fieldset class="fieldset">
+          <legend class="legend">🔬 Grid</legend>
+          <div class="ctrl-row">
+            <label class="ctrl-lbl">Rows <input type="number" id="inp-rows" value="40" min="5" max="200" class="ctrl-inp"></label>
+            <label class="ctrl-lbl">Cols <input type="number" id="inp-cols" value="60" min="5" max="200" class="ctrl-inp"></label>
+          </div>
+          <label class="ctrl-lbl" style="margin-top:.75rem">Orientations
+            <select id="inp-oris" class="ctrl-inp">
+              <option value="3" selected>3 Orientations</option>
+              <option value="6">6 Orientations</option>
+            </select>
+          </label>
+        </fieldset>
+
+        <fieldset class="fieldset">
+          <legend class="legend">⚡ Energy & Temperature</legend>
+          <div class="ctrl-row">
+            <label class="ctrl-lbl">Bulk Energy <input type="number" id="inp-bulkE" value="-50" class="ctrl-inp"></label>
+            <label class="ctrl-lbl">Grain Energy <input type="number" id="inp-grainE" value="50" class="ctrl-inp"></label>
+            <label class="ctrl-lbl">Temperature <input type="number" id="inp-T" value="100" min="1" class="ctrl-inp"></label>
+            <label class="ctrl-lbl">Trials / Frame <input type="number" id="inp-trials" value="100" min="1" class="ctrl-inp"></label>
+          </div>
+          <label class="ctrl-lbl" style="margin-top:.75rem">Time Interval (ms) <input type="number" id="inp-interval" value="1" min="1" class="ctrl-inp"></label>
+        </fieldset>
+
+        <fieldset class="fieldset">
+          <legend class="legend">🎮 Actions</legend>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <button id="btn-start" class="btn btn-primary">▶ Start</button>
+            <button id="btn-regen" class="btn btn-secondary">🌱 Regenerate</button>
+            <button id="btn-mix" class="btn btn-secondary">🎲 Mix</button>
+          </div>
+        </fieldset>
+
+        <fieldset class="fieldset">
+          <legend class="legend">📊 Statistics</legend>
+          <div class="stat-line">MC Trials: <strong id="stat-trials">0</strong></div>
+          <div class="stat-line">Boundary Sites: <strong id="stat-boundary">0%</strong></div>
+          <div class="stat-line">Mean Grain Size: <strong id="stat-grain">0 cells</strong></div>
+          <div style="margin-top:.75rem">
+            <div style="font-size:.7rem;font-weight:700;color:var(--secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Total Energy</div>
+            <canvas id="energy-canvas" width="240" height="100" style="width:100%;height:100px;border-radius:6px;display:block;background:rgba(30,34,42,0.6)"></canvas>
+          </div>
+        </fieldset>
+
+      </div>
+
+      <div class="sandbox-canvas-wrap">
+        <div class="polaroid">
+          <div class="polaroid-inner">
+            <canvas id="grid-canvas" style="display:block;cursor:crosshair;image-rendering:pixelated;width:100%"></canvas>
+          </div>
+          <div class="polaroid-caption" id="canvas-caption">Monte Carlo Grain Growth · 3 Orientations</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Questions -->
+  <section>
+    <h2 class="q-section-title">🔬 Exploration Questions</h2>
+    <p class="q-subtitle">Run the simulation with different parameters to answer these physical analysis questions.</p>
+    <div class="q-list">
+
+      <div class="q-card">
+        <span class="q-badge">Question 1</span>
+        <p class="q-text">What is the effect of having bulk/boundary energy difference being too big or very close?</p>
+        <div class="q-answer">
+          <p><strong>Energies very close:</strong> &Delta;E for any proposed flip is very small. The Glauber acceptance probability tends toward 50%. Boundaries dissolve into random, fuzzy noise because thermal fluctuations easily overpower the weak boundary energy penalty.</p>
+          <p style="margin-top:.75rem"><strong>Energies far apart:</strong> &Delta;E becomes very large. Unfavorable moves get acceptance probability of virtually 0%, favorable moves get 100%. The system becomes deterministic and will freeze in local minima without thermal jiggling.</p>
+        </div>
+      </div>
+
+      <div class="q-card">
+        <span class="q-badge">Question 2</span>
+        <p class="q-text">Which curvature wins (negative or positive)? Why?</p>
+        <div class="q-answer">
+          <p>Convex surfaces (curving outward, small grains) <strong>lose</strong> and are consumed by concave surfaces (large grains). A cell protruding outward has more <em>unlike</em> neighbors, giving it a higher energy penalty. To minimize energy, it flips to match the surrounding grain. Boundaries inherently migrate toward their center of curvature.</p>
+        </div>
+      </div>
+
+      <div class="q-card">
+        <span class="q-badge">Question 3</span>
+        <p class="q-text">What happens to the grain size? Why?</p>
+        <div class="q-answer">
+          <p>The average grain size <strong>continuously increases</strong>. Small, highly-curved grains shrink and disappear. As fewer grains remain in the same total area, the mean grain size necessarily grows.</p>
+        </div>
+      </div>
+
+      <div class="q-card">
+        <span class="q-badge">Question 4</span>
+        <p class="q-text">Does low or high temperature change these tendencies?</p>
+        <div class="q-answer">
+          <p><strong>High Temperature:</strong> Increases the denominator in &Delta;E/T, driving acceptance probability closer to 50% for all moves. Introduces more random noise.</p>
+          <p style="margin-top:.5rem"><strong>Low Temperature:</strong> Makes the system highly directional, only accepting moves that strictly lower local energy.</p>
+        </div>
+      </div>
+
+      <div class="q-card">
+        <span class="q-badge">Question 5</span>
+        <p class="q-text">Does the temperature change the grain size change rate?</p>
+        <div class="q-answer">
+          <p>Yes, higher temperature <strong>increases</strong> the growth rate. Boundaries in a lattice are jagged; smoothing them often requires a temporary, unfavorable energy increase. Low temperatures cause the system to freeze in local energy minima. Higher temperatures provide the thermal energy to overcome these barriers, allowing boundaries to migrate freely and grains to grow faster.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <section style="margin-bottom:1rem">
+    <div class="step-header"><span class="step-num">04</span><h2>Under the Hood: MC Trial</h2></div>
+    <div class="step-content">
+      <p>The core Monte Carlo trial with skip optimization and Glauber acceptance:</p>
+      <div class="code-block"><span class="cm">// Pick random cell</span>
+<span class="kw">const</span> r <span class="op">=</span> Math.<span class="fn">floor</span>(Math.<span class="fn">random</span>() <span class="op">*</span> rows);
+<span class="kw">const</span> c <span class="op">=</span> Math.<span class="fn">floor</span>(Math.<span class="fn">random</span>() <span class="op">*</span> cols);
+<span class="kw">const</span> ori <span class="op">=</span> grid[r <span class="op">*</span> cols <span class="op">+</span> c];
+
+<span class="cm">// Check 8 neighbors (periodic)</span>
+<span class="kw">let</span> allSame <span class="op">=</span> <span class="kw">true</span>;
+<span class="kw">for</span> (<span class="kw">const</span> [dr, dc] <span class="kw">of</span> MOORE) {
+    <span class="kw">const</span> nOri <span class="op">=</span> grid[<span class="fn">pmod</span>(r<span class="op">+</span>dr, rows) <span class="op">*</span> cols <span class="op">+</span> <span class="fn">pmod</span>(c<span class="op">+</span>dc, cols)];
+    <span class="kw">if</span> (nOri <span class="op">!==</span> ori) allSame <span class="op">=</span> <span class="kw">false</span>;
+}
+<span class="kw">if</span> (allSame) <span class="kw">continue</span>; <span class="cm">// skip homogeneous</span>
+
+<span class="cm">// Glauber acceptance</span>
+<span class="kw">const</span> ratio <span class="op">=</span> dE <span class="op">/</span> T;
+<span class="kw">const</span> pAccept <span class="op">=</span> ratio <span class="op">></span> <span class="num">50</span> ? <span class="num">0</span>
+              <span class="op">:</span> ratio <span class="op"><</span> <span class="num">-50</span> ? <span class="num">1</span>
+              <span class="op">:</span> <span class="num">1</span> <span class="op">/</span> (<span class="num">1</span> <span class="op">+</span> Math.<span class="fn">exp</span>(ratio));</div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="site-footer">MAT206 — Kinetics of Materials · Spring 2026</footer>
+
+<script>
+(function(){
+"use strict";
+
+// ── Palettes ──────────────────────────────────────────────────────────────
+const PAL3 = ["#E06C75","#61AFEF","#98C379"];
+const PAL6 = ["#E06C75","#61AFEF","#98C379","#D19A66","#C678DD","#56B6C2"];
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function pmod(n,m){return((n%m)+m)%m;}
+const MOORE=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+
+function periodicDist2(r1,c1,r2,c2,R,C){
+    const dr=Math.min(Math.abs(r1-r2),R-Math.abs(r1-r2));
+    const dc=Math.min(Math.abs(c1-c2),C-Math.abs(c1-c2));
+    return dr*dr+dc*dc;
+}
+
+function voronoi(R,C,N){
+    const grid=new Uint8Array(R*C);
+    const seeds=[];
+    for(let o=0;o<N;o++) seeds.push({r:Math.floor(Math.random()*R),c:Math.floor(Math.random()*C),o});
+    for(let r=0;r<R;r++){
+        for(let c=0;c<C;c++){
+            let best=0,minD=Infinity;
+            for(const s of seeds){const d=periodicDist2(r,c,s.r,s.c,R,C);if(d<minD){minD=d;best=s.o;}}
+            grid[r*C+c]=best;
+        }
+    }
+    return grid;
+}
+
+function mix(R,C,N){
+    const grid=new Uint8Array(R*C);
+    for(let i=0;i<grid.length;i++) grid[i]=Math.floor(Math.random()*N);
+    return grid;
+}
+
+function totalEnergy(grid,R,C,bE,gE){
+    let total=0;
+    for(let r=0;r<R;r++){
+        for(let c=0;c<C;c++){
+            const ori=grid[r*C+c];
+            for(const[dr,dc]of MOORE){
+                const nr=pmod(r+dr,R),nc=pmod(c+dc,C);
+                total+=grid[nr*C+nc]===ori?bE:gE;
+            }
+        }
+    }
+    return total/2;
+}
+
+function boundarySites(grid,R,C){
+    let cnt=0;
+    for(let r=0;r<R;r++){
+        for(let c=0;c<C;c++){
+            const ori=grid[r*C+c];
+            for(const[dr,dc]of MOORE){
+                if(grid[pmod(r+dr,R)*C+pmod(c+dc,C)]!==ori){cnt++;break;}
+            }
+        }
+    }
+    return cnt;
+}
+
+function countGrains(grid,R,C){
+    const visited=new Uint8Array(R*C);
+    let grains=0;
+    for(let r=0;r<R;r++){
+        for(let c=0;c<C;c++){
+            const idx=r*C+c;
+            if(visited[idx])continue;
+            grains++;
+            const queue=[idx];visited[idx]=1;const ori=grid[idx];
+            while(queue.length>0){
+                const cur=queue.pop();
+                const cr=Math.floor(cur/C),cc=cur%C;
+                for(const[dr,dc]of MOORE){
+                    const nr=pmod(cr+dr,R),nc=pmod(cc+dc,C),nIdx=nr*C+nc;
+                    if(!visited[nIdx]&&grid[nIdx]===ori){visited[nIdx]=1;queue.push(nIdx);}
+                }
+            }
+        }
+    }
+    return grains;
+}
+
+// ── DOM ───────────────────────────────────────────────────────────────────
+const g=id=>document.getElementById(id);
+const gn=id=>Number(g(id).value);
+
+const gridCanvas=g("grid-canvas"), gridCtx=gridCanvas.getContext("2d");
+const energyCanvas=g("energy-canvas"), energyCtx=energyCanvas.getContext("2d");
+
+let grid, running=false, timer=null, stepCount=0;
+const energyHistory=[];
+
+function getParams(){
+    return {
+        R:gn("inp-rows"),C:gn("inp-cols"),N:gn("inp-oris"),
+        bE:gn("inp-bulkE"),gE:gn("inp-grainE"),T:gn("inp-T"),
+        trials:gn("inp-trials"),interval:gn("inp-interval")
+    };
+}
+
+function drawGrid(){
+    const{R,C,N}=getParams();
+    const pal=N===6?PAL6:PAL3;
+    gridCanvas.width=C*2;gridCanvas.height=R*2;
+    const parent=gridCanvas.parentElement;
+    const w=parent.clientWidth;
+    const h=Math.round(w*(R/C));
+    gridCanvas.style.width=w+"px";gridCanvas.style.height=h+"px";
+    const cw=gridCanvas.width/C,ch=gridCanvas.height/R;
+    for(let r=0;r<R;r++){
+        for(let c=0;c<C;c++){
+            gridCtx.fillStyle=pal[grid[r*C+c]%pal.length];
+            gridCtx.fillRect(c*cw,r*ch,cw+.5,ch+.5);
+        }
+    }
+    g("canvas-caption").textContent="Monte Carlo Grain Growth · "+N+" Orientations";
+}
+
+function drawEnergyPlot(){
+    const W=energyCanvas.width,H=energyCanvas.height;
+    energyCtx.clearRect(0,0,W,H);
+    energyCtx.fillStyle="rgba(30,34,42,0.6)";
+    energyCtx.fillRect(0,0,W,H);
+    if(energyHistory.length<2)return;
+    const minE=Math.min(...energyHistory),maxE=Math.max(...energyHistory),range=maxE-minE||1;
+    energyCtx.strokeStyle="#61AFEF";energyCtx.lineWidth=1.5;energyCtx.beginPath();
+    for(let i=0;i<energyHistory.length;i++){
+        const x=(i/(energyHistory.length-1))*W;
+        const y=H-((energyHistory[i]-minE)/range)*(H-10)-5;
+        i===0?energyCtx.moveTo(x,y):energyCtx.lineTo(x,y);
+    }
+    energyCtx.stroke();
+    energyCtx.fillStyle="rgba(255,255,255,0.5)";energyCtx.font="10px monospace";
+    energyCtx.fillText("max: "+maxE.toFixed(0),4,12);
+    energyCtx.fillText("min: "+minE.toFixed(0),4,H-4);
+}
+
+function updateStats(){
+    const{R,C,bE,gE}=getParams();
+    const total=R*C;
+    const boundary=boundarySites(grid,R,C);
+    g("stat-boundary").textContent=((boundary/total)*100).toFixed(1)+"%";
+    const grains=countGrains(grid,R,C);
+    g("stat-grain").textContent=(total/grains).toFixed(1)+" cells";
+    g("stat-trials").textContent=stepCount.toLocaleString();
+    const energy=totalEnergy(grid,R,C,bE,gE);
+    energyHistory.push(energy);
+    if(energyHistory.length>500)energyHistory.shift();
+}
+
+function initGrid(mode){
+    const{R,C,N}=getParams();
+    grid=mode==="voronoi"?voronoi(R,C,N):mix(R,C,N);
+    energyHistory.length=0;
+    stepCount=0;
+    updateStats();drawGrid();drawEnergyPlot();
+}
+
+function mcStep(){
+    const{R,C,bE,gE,T,trials,N}=getParams();
+    for(let t=0;t<trials;t++){
+        const r=Math.floor(Math.random()*R),c=Math.floor(Math.random()*C);
+        const idx=r*C+c,ori=grid[idx];
+        const nOris=[];let allSame=true;
+        for(const[dr,dc]of MOORE){
+            const nOri=grid[pmod(r+dr,R)*C+pmod(c+dc,C)];
+            nOris.push(nOri);
+            if(nOri!==ori)allSame=false;
+        }
+        if(allSame)continue;
+        const pool=nOris.filter(o=>o!==ori);
+        const invading=pool[Math.floor(Math.random()*pool.length)];
+        let eI=0,eF=0;
+        for(const n of nOris){eI+=(n===ori)?bE:gE;eF+=(n===invading)?bE:gE;}
+        const dE=eF-eI,ratio=dE/T;
+        let pA;
+        if(ratio>50)pA=0;else if(ratio<-50)pA=1;else pA=1/(1+Math.exp(ratio));
+        if(Math.random()<pA) grid[idx]=invading;
+    }
+    stepCount+=trials;
+}
+
+function tick(){
+    if(!running)return;
+    mcStep();updateStats();drawGrid();drawEnergyPlot();
+    timer=setTimeout(tick,getParams().interval);
+}
+
+// ── Events ────────────────────────────────────────────────────────────────
+g("btn-start").addEventListener("click",()=>{
+    running=!running;
+    g("btn-start").textContent=running?"⏸ Pause":"▶ Start";
+    g("btn-start").className=running?"btn btn-danger":"btn btn-primary";
+    if(running)tick();else if(timer)clearTimeout(timer);
+});
+g("btn-regen").addEventListener("click",()=>{running=false;g("btn-start").textContent="▶ Start";g("btn-start").className="btn btn-primary";if(timer)clearTimeout(timer);initGrid("voronoi");});
+g("btn-mix").addEventListener("click",()=>{running=false;g("btn-start").textContent="▶ Start";g("btn-start").className="btn btn-primary";if(timer)clearTimeout(timer);initGrid("mix");});
+
+gridCanvas.addEventListener("click",(e)=>{
+    const rect=gridCanvas.getBoundingClientRect();
+    const{R,C,N}=getParams();
+    const c=Math.floor(((e.clientX-rect.left)/rect.width)*C);
+    const r=Math.floor(((e.clientY-rect.top)/rect.height)*R);
+    if(r>=0&&r<R&&c>=0&&c<C){grid[r*C+c]=(grid[r*C+c]+1)%N;drawGrid();}
+});
+
+// Init
+initGrid("voronoi");
+
+})();
+</script>
+</body>
+</html>
