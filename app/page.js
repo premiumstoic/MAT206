@@ -51,6 +51,16 @@ const assignments = [
     featured: true,
     image: "/images/wulff_card.png",
   },
+  {
+    week: 6,
+    slug: "recit6",
+    title: "Grain Growth",
+    description:
+      "Simulate curvature-driven grain boundary migration using Monte Carlo Glauber kinetics on a 2D lattice with periodic boundaries.",
+    status: "active",
+    featured: true,
+    image: "/images/grain_growth_card.png",
+  },
 ];
 
 function StatusBadge({ status }) {
