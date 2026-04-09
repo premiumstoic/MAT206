@@ -494,75 +494,82 @@ export default function PowerVoronoiSimulation() {
   const btnStyle = { fontFamily: "var(--font-mono)", fontSize: "0.75rem", fontWeight: 700, padding: "6px 12px", borderRadius: 6, border: "none", cursor: "pointer", transition: "all 0.2s" };
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "1.5rem", alignItems: "flex-start" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 
-      {/* Controls */}
-      <div style={{ flex: "1 1 240px", minWidth: 230, maxWidth: 320 }}>
-
-        <fieldset style={fieldStyle}>
-          <legend style={legendStyle}>🎮 Actions</legend>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <button onClick={() => setRunning(r => !r)} style={{ ...btnStyle, background: running ? "#E06C75" : "var(--color-amber)", color: "white" }}>
-              {running ? "⏸ Pause" : "▶ Start"}
-            </button>
-            <button onClick={() => { setRunning(false); doInit(); }} style={{ ...btnStyle, background: "var(--color-cream)", color: "var(--color-charcoal)", border: "1px solid var(--color-pencil)" }}>
-              🔄 Reset
-            </button>
-          </div>
-        </fieldset>
-
-        <fieldset style={fieldStyle}>
-          <legend style={legendStyle}>🎚️ Size Spread</legend>
-          <label style={{ ...lblStyle, gap: 6 }}>
-            Initial size spread: <strong style={{ color: "var(--color-charcoal)" }}>{spreadPct}%</strong>
-            <input type="range" min="0" max="100" value={spreadPct}
-              onChange={e => handleSpreadChange(Number(e.target.value))}
-              style={{ width: "100%", accentColor: "var(--color-amber)" }} />
-          </label>
-        </fieldset>
-
-        <fieldset style={fieldStyle}>
-          <legend style={legendStyle}>🔬 Simulation</legend>
-          <div style={ctrlGrid}>
-            <label style={lblStyle}>Seeds <input type="number" min="3" max="1000" value={nSeeds} onChange={e => setNSeeds(Number(e.target.value))} style={inputStyle} /></label>
-            <label style={lblStyle}>Temperature (K) <input type="number" min="1" value={temperature} onChange={e => setTemperature(Number(e.target.value))} style={inputStyle} /></label>
-            <label style={lblStyle}>Q<sub>m</sub> (kJ/mol) <input type="number" value={Qm} onChange={e => setQm(Number(e.target.value))} style={inputStyle} /></label>
-            <label style={lblStyle}>γ (J/m²) <input type="number" step="0.1" value={gamma} onChange={e => setGamma(Number(e.target.value))} style={inputStyle} /></label>
-            <label style={lblStyle}>M₀ (m⁴/Js) <input type="text" value={M0} onChange={e => setM0(Number(e.target.value))} style={inputStyle} /></label>
-            <label style={lblStyle}>µm/px <input type="number" step="0.1" min="0.01" value={umPerPx} onChange={e => setUmPerPx(Number(e.target.value))} style={inputStyle} /></label>
-            <label style={lblStyle}>dt (s) <input type="number" step="0.1" min="0.01" value={dt} onChange={e => setDt(Number(e.target.value))} style={inputStyle} /></label>
-            <label style={lblStyle}>Recompute C / N <input type="number" min="1" value={recomputeN} onChange={e => setRecomputeN(Number(e.target.value))} style={inputStyle} /></label>
-            <label style={lblStyle}>ε for dA/dw <input type="number" step="0.1" value={epsW} onChange={e => setEpsW(Number(e.target.value))} style={inputStyle} /></label>
-            <label style={lblStyle}>Min area (µm²) <input type="number" step="0.5" value={minArea} onChange={e => setMinArea(Number(e.target.value))} style={inputStyle} /></label>
-          </div>
-        </fieldset>
-
-        <fieldset style={fieldStyle}>
-          <legend style={legendStyle}>📊 Statistics</legend>
-          <div style={{ fontSize: "0.8rem", color: "var(--color-secondary)", lineHeight: 2 }}>
-            <div>Time: <strong style={{ color: "var(--color-charcoal)" }}>{statsDisplay.time} s</strong></div>
-            <div>Active Grains: <strong style={{ color: "var(--color-charcoal)" }}>{statsDisplay.count}</strong></div>
-            <div>Mean Area: <strong style={{ color: "var(--color-charcoal)" }}>{statsDisplay.meanArea} µm²</strong></div>
-            <div>Mean Sides: <strong style={{ color: "var(--color-charcoal)" }}>{statsDisplay.meanSides}</strong></div>
-            <div style={{ fontSize: "0.7rem", marginTop: "0.25rem", fontFamily: "var(--font-mono)", color: "var(--color-secondary)" }}>
-              K={statsDisplay.K} &nbsp; M={statsDisplay.M} &nbsp; C={statsDisplay.C}
+      {/* Top Controls Row */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
+        
+        {/* Left Column: Actions, Spread, Simulation */}
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          
+          <fieldset style={fieldStyle}>
+            <legend style={legendStyle}>🎮 Actions</legend>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <button onClick={() => setRunning(r => !r)} style={{ ...btnStyle, background: running ? "#E06C75" : "var(--color-amber)", color: "white" }}>
+                {running ? "⏸ Pause" : "▶ Start"}
+              </button>
+              <button onClick={() => { setRunning(false); doInit(); }} style={{ ...btnStyle, background: "var(--color-cream)", color: "var(--color-charcoal)", border: "1px solid var(--color-pencil)" }}>
+                🔄 Reset
+              </button>
             </div>
-          </div>
-          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem", flexWrap: "wrap" }}>
-            <div style={{ flex: "1 1 110px" }}>
-              <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--color-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 3 }}>Mean Area</div>
-              <canvas ref={plotAreaRef} width="200" height="80" style={{ width: "100%", height: 80, borderRadius: 6, display: "block" }} />
+          </fieldset>
+
+          <fieldset style={fieldStyle}>
+            <legend style={legendStyle}>🎚️ Size Spread</legend>
+            <label style={{ ...lblStyle, gap: 6 }}>
+              Initial size spread: <strong style={{ color: "var(--color-charcoal)" }}>{spreadPct}%</strong>
+              <input type="range" min="0" max="100" value={spreadPct}
+                onChange={e => handleSpreadChange(Number(e.target.value))}
+                style={{ width: "100%", accentColor: "var(--color-amber)" }} />
+            </label>
+          </fieldset>
+
+          <fieldset style={fieldStyle}>
+            <legend style={legendStyle}>🔬 Simulation</legend>
+            <div style={ctrlGrid}>
+              <label style={lblStyle}>Seeds <input type="number" min="3" max="1000" value={nSeeds} onChange={e => setNSeeds(Number(e.target.value))} style={inputStyle} /></label>
+              <label style={lblStyle}>Temperature (K) <input type="number" min="1" value={temperature} onChange={e => setTemperature(Number(e.target.value))} style={inputStyle} /></label>
+              <label style={lblStyle}>Q<sub>m</sub> (kJ/mol) <input type="number" value={Qm} onChange={e => setQm(Number(e.target.value))} style={inputStyle} /></label>
+              <label style={lblStyle}>γ (J/m²) <input type="number" step="0.1" value={gamma} onChange={e => setGamma(Number(e.target.value))} style={inputStyle} /></label>
+              <label style={lblStyle}>M₀ (m⁴/Js) <input type="text" value={M0} onChange={e => setM0(Number(e.target.value))} style={inputStyle} /></label>
+              <label style={lblStyle}>µm/px <input type="number" step="0.1" min="0.01" value={umPerPx} onChange={e => setUmPerPx(Number(e.target.value))} style={inputStyle} /></label>
+              <label style={lblStyle}>dt (s) <input type="number" step="0.1" min="0.01" value={dt} onChange={e => setDt(Number(e.target.value))} style={inputStyle} /></label>
+              <label style={lblStyle}>Recompute C / N <input type="number" min="1" value={recomputeN} onChange={e => setRecomputeN(Number(e.target.value))} style={inputStyle} /></label>
+              <label style={lblStyle}>ε for dA/dw <input type="number" step="0.1" value={epsW} onChange={e => setEpsW(Number(e.target.value))} style={inputStyle} /></label>
+              <label style={lblStyle}>Min area (µm²) <input type="number" step="0.5" value={minArea} onChange={e => setMinArea(Number(e.target.value))} style={inputStyle} /></label>
             </div>
-            <div style={{ flex: "1 1 110px" }}>
-              <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--color-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 3 }}>Grain Count</div>
-              <canvas ref={plotCountRef} width="200" height="80" style={{ width: "100%", height: 80, borderRadius: 6, display: "block" }} />
+          </fieldset>
+        </div>
+
+        {/* Right Column: Statistics */}
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <fieldset style={{...fieldStyle, height: "100%", display: "flex", flexDirection: "column", marginBottom: 0}}>
+            <legend style={legendStyle}>📊 Statistics</legend>
+            <div style={{ fontSize: "0.8rem", color: "var(--color-secondary)", lineHeight: 2 }}>
+              <div>Time: <strong style={{ color: "var(--color-charcoal)" }}>{statsDisplay.time} s</strong></div>
+              <div>Active Grains: <strong style={{ color: "var(--color-charcoal)" }}>{statsDisplay.count}</strong></div>
+              <div>Mean Area: <strong style={{ color: "var(--color-charcoal)" }}>{statsDisplay.meanArea} µm²</strong></div>
+              <div>Mean Sides: <strong style={{ color: "var(--color-charcoal)" }}>{statsDisplay.meanSides}</strong></div>
+              <div style={{ fontSize: "0.7rem", marginTop: "0.25rem", fontFamily: "var(--font-mono)", color: "var(--color-secondary)" }}>
+                K={statsDisplay.K} &nbsp; M={statsDisplay.M} &nbsp; C={statsDisplay.C}
+              </div>
             </div>
-          </div>
-        </fieldset>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "auto", flexGrow: 1, justifyContent: "flex-end", paddingTop: "1rem" }}>
+              <div style={{ width: "100%" }}>
+                <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--color-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 3 }}>Mean Area</div>
+                <canvas ref={plotAreaRef} width="400" height="120" style={{ width: "100%", height: 120, borderRadius: 6, display: "block" }} />
+              </div>
+              <div style={{ width: "100%" }}>
+                <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--color-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 3 }}>Grain Count</div>
+                <canvas ref={plotCountRef} width="400" height="120" style={{ width: "100%", height: 120, borderRadius: 6, display: "block" }} />
+              </div>
+            </div>
+          </fieldset>
+        </div>
       </div>
 
       {/* Canvas */}
-      <div style={{ flex: "1 1 400px", minWidth: 240, position: "sticky", top: "2rem" }}>
+      <div style={{ width: "100%" }}>
         <div className="polaroid" style={{ margin: 0, width: "100%" }}>
           <div style={{ width: "100%", overflow: "hidden", background: "#1E222A", borderRadius: "2px" }}>
             <canvas ref={canvasRef} style={{ display: "block", width: "100%" }} />
