@@ -46,10 +46,48 @@ input[type=range]{flex:1;accent-color:#e5c07b;height:6px}
 .plot-label{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#5c6370;margin-bottom:2px}
 .plot-canvas{width:100%;height:70px;border-radius:4px;display:block;background:#1a1d23}
 
+/* Theory button */
+.btn-theory{width:100%;font-family:inherit;font-size:.8rem;font-weight:700;padding:9px 0;border:none;border-radius:8px;cursor:pointer;background:linear-gradient(135deg,#e5c07b,#d19a66);color:#1a1d23;transition:all .15s;letter-spacing:.02em;margin-top:4px}
+.btn-theory:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-theory:active{transform:scale(.98)}
+
 /* Right Panel (Canvas) */
 #canvas-wrap{flex:1;display:flex;flex-direction:column;background:#1e222a}
 #simCanvas{flex:1;display:block;width:100%;height:100%}
 #caption{text-align:center;padding:4px;font-size:.72rem;font-style:italic;color:#5c6370;background:#21252b;border-top:1px solid #333842}
+
+/* Modal Overlay */
+#modal-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(10,12,16,0.85);backdrop-filter:blur(8px);overflow-y:auto}
+#modal-overlay.open{display:block}
+#modal-inner{max-width:820px;margin:2rem auto;padding:2.5rem 2rem 3rem;background:#21252b;border-radius:16px;border:1px solid #333842;box-shadow:0 8px 40px rgba(0,0,0,0.5);position:relative}
+#modal-inner h1{font-size:1.8rem;font-weight:800;color:#e5c07b;margin-bottom:.25rem}
+#modal-inner .subtitle{font-size:.9rem;color:#7f848e;margin-bottom:2rem;font-style:italic}
+.close-btn{position:sticky;top:0;float:right;background:#3e4451;border:1px solid #4b5263;color:#abb2bf;font-size:.8rem;font-weight:700;padding:6px 14px;border-radius:6px;cursor:pointer;z-index:10}
+.close-btn:hover{background:#4b5263;color:#fff}
+
+/* Theory Steps */
+.theory-step{margin-bottom:2rem;padding-left:1.25rem;border-left:3px solid #e5c07b}
+.theory-step .step-num{font-size:.7rem;font-weight:800;color:#e5c07b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem}
+.theory-step h2{font-size:1.15rem;font-weight:700;color:#c8ccd4;margin-bottom:.5rem}
+.theory-step p{font-size:.88rem;color:#abb2bf;line-height:1.7;margin-bottom:.5rem}
+.eq-pill{display:inline-block;background:#282c34;border:1px solid #3e4451;border-radius:6px;padding:6px 16px;font-family:'Cascadia Code','Fira Code',monospace;font-size:.82rem;color:#98c379;margin:.75rem 0}
+.eq-center{text-align:center;margin:.75rem 0}
+
+/* Questions */
+.q-section-title{font-size:1.2rem;font-weight:800;color:#c8ccd4;margin:2rem 0 .5rem;padding-top:1.5rem;border-top:1px solid #333842}
+.q-card{background:#282c34;border:1px solid #3e4451;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1rem}
+.q-badge{display:inline-block;font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#e5c07b;background:#3e4451;padding:3px 10px;border-radius:20px;margin-bottom:.5rem}
+.q-text{font-size:.9rem;font-weight:600;color:#c8ccd4;margin-bottom:.5rem}
+.q-answer{font-size:.84rem;color:#7f848e;line-height:1.65}
+.q-answer strong{color:#abb2bf}
+
+/* Code */
+.code-section{margin-top:2rem;padding-top:1.5rem;border-top:1px solid #333842}
+.code-block{background:#1a1d23;border:1px solid #333842;border-radius:8px;padding:1rem;font-family:'Cascadia Code','Fira Code',monospace;font-size:.75rem;color:#abb2bf;overflow-x:auto;white-space:pre;line-height:1.6}
+.code-block .kw{color:#c678dd}
+.code-block .cm{color:#5c6370;font-style:italic}
+.code-block .fn{color:#61afef}
+.code-block .num{color:#d19a66}
 </style>
 </head>
 <body>
@@ -116,6 +154,8 @@ input[type=range]{flex:1;accent-color:#e5c07b;height:6px}
 </div>
 </fieldset>
 
+<button class="btn-theory" onclick="toggleModal()">📖 Theory &amp; Questions</button>
+
 </div>
 
 <!-- Right Panel: Canvas -->
@@ -124,6 +164,119 @@ input[type=range]{flex:1;accent-color:#e5c07b;height:6px}
 <div id="caption">Power-Voronoi Grain Growth · 300 Grains</div>
 </div>
 
+</div>
+
+<!-- ═══ Modal Overlay ═══ -->
+<div id="modal-overlay" onclick="if(event.target===this)toggleModal()">
+<div id="modal-inner">
+<button class="close-btn" onclick="toggleModal()">✕ Close</button>
+<h1>Power-Voronoi Grain Growth</h1>
+<p class="subtitle">A geometric macroscopic simulation linking Arrhenius mobility to von&nbsp;Neumann–Mullins coarsening.</p>
+
+<!-- Step 01 -->
+<div class="theory-step">
+<div class="step-num">Step 01</div>
+<h2>Power-Voronoi Geometry</h2>
+<p>In a standard Voronoi diagram, each cell contains the points closest to a particular seed. A <strong>Power-Voronoi</strong> (or Laguerre) diagram generalizes this by assigning each seed a <em>weight</em> w<sub>i</sub>. The <em>power distance</em> from a point <strong>p</strong> to a seed <strong>s<sub>i</sub></strong> is:</p>
+<div class="eq-center"><span class="eq-pill">d<sub>pow</sub>(p, s<sub>i</sub>) = |p − s<sub>i</sub>|² − w<sub>i</sub></span></div>
+<p>The cell of seed i contains all points whose power distance to i is less than to every other seed. Increasing a seed's weight makes its cell grow; decreasing it makes the cell shrink. We compute each cell via <strong>Sutherland–Hodgman polygon clipping</strong> against the bisector half-planes of competing seeds.</p>
+</div>
+
+<!-- Step 02 -->
+<div class="theory-step">
+<div class="step-num">Step 02</div>
+<h2>Materials Kinetics</h2>
+<p>Grain boundary mobility follows the <strong>Arrhenius equation</strong>:</p>
+<div class="eq-center"><span class="eq-pill">M(T) = M₀ · exp(−Q<sub>m</sub> / RT)</span></div>
+<p>The <strong>von Neumann–Mullins relation</strong> gives the target area change per timestep:</p>
+<div class="eq-center"><span class="eq-pill">dA/dt = K(n − 6) &nbsp; where &nbsp; K = (π/3) · γ · M</span></div>
+<p>This means grains with <strong>n &lt; 6 sides shrink</strong>, grains with <strong>n &gt; 6 sides grow</strong>, and <strong>6-sided grains are metastable</strong>.</p>
+</div>
+
+<!-- Step 03 -->
+<div class="theory-step">
+<div class="step-num">Step 03</div>
+<h2>The Numerical Weight Update</h2>
+<p>Instead of solving local curvature explicitly, we use the power-Voronoi weights to control grain area. The <strong>key trick</strong> is a numerical sensitivity estimate:</p>
+<div class="eq-center"><span class="eq-pill">dA/dw ≈ (A(w + ε) − A(w)) / ε</span></div>
+<p>From this we derive a global calibration factor C = 1 / mean(dA/dw), and update each grain's weight as:</p>
+<div class="eq-center"><span class="eq-pill">Δw = C × ΔA<sub>px</sub></span></div>
+<p>The calibration factor C is recomputed every N steps with damping to prevent numerical instability.</p>
+</div>
+
+<!-- Questions -->
+<h2 class="q-section-title">🔬 Exploration Questions</h2>
+
+<div class="q-card">
+<span class="q-badge">Question 1</span>
+<p class="q-text">How does the initial heterogeneity affect early-stage growth?</p>
+<div class="q-answer">If the initial size spread is large, the early stages exhibit extremely rapid, almost "abnormal" coarsening. The initial state contains very small grains next to very large grains. Since dA/dt ∝ (n − 6), small grains (n &lt; 6) rapidly collapse while large grains (n &gt; 6) consume them. However, as the most unstable grains vanish, the microstructure self-corrects toward a smoother, steady-state "normal" grain size distribution.</div>
+</div>
+
+<div class="q-card">
+<span class="q-badge">Question 2</span>
+<p class="q-text">Which grains shrink and which grow? Does it match dA/dt = K(n−6)?</p>
+<div class="q-answer">Yes, the simulation precisely follows the geometric prediction. Grains with <strong>3, 4, or 5 sides</strong> consistently lose area and eventually vanish. Grains with exactly <strong>6 sides</strong> are metastable. Grains with <strong>7 or more sides</strong> consistently grow. This confirms that boundary curvature dictates growth purely by topological side count.</div>
+</div>
+
+<div class="q-card">
+<span class="q-badge">Question 3</span>
+<p class="q-text">What happens to the coarsening rate when Temperature increases?</p>
+<div class="q-answer">Increasing the temperature dramatically accelerates the coarsening rate. The boundary mobility follows M(T) = M₀ exp(−Q<sub>m</sub> / RT). As T increases, the fraction −Q<sub>m</sub>/RT becomes a smaller negative number (closer to zero), so the exponential rapidly approaches 1, resulting in exponentially higher mobility and faster boundary migration.</div>
+</div>
+
+<div class="q-card">
+<span class="q-badge">Question 4</span>
+<p class="q-text">How does increasing Activation Energy (Q<sub>m</sub>) change the evolution rate?</p>
+<div class="q-answer">Increasing Q<sub>m</sub> drastically slows down evolution. Q<sub>m</sub> represents the energy barrier atoms must overcome to jump across the boundary. In exp(−Q<sub>m</sub> / RT), a larger Q<sub>m</sub> makes the exponent a much larger negative number, driving the exponential closer to zero and severely restricting boundary mobility.</div>
+</div>
+
+<div class="q-card">
+<span class="q-badge">Question 5</span>
+<p class="q-text">Changing M₀ vs. changing Q<sub>m</sub>: Scale vs. Thermal Sensitivity</p>
+<div class="q-answer"><strong>Changing M₀</strong> (pre-exponential factor): M₀ is a linear multiplier. It alters the overall scale of mobility across all temperatures equally. Doubling M₀ exactly doubles the simulation speed.<br><br><strong>Changing Q<sub>m</sub></strong> (activation energy): Q<sub>m</sub> sits inside the exponent and governs thermal sensitivity. It dictates how strongly the material responds to changes in temperature. A high Q<sub>m</sub> means sluggish behavior at low T but a steep spike in mobility as T increases.</div>
+</div>
+
+<div class="q-card">
+<span class="q-badge">Question 6</span>
+<p class="q-text">Compare the effects of γ and M₀. Do they produce similar changes?</p>
+<div class="q-answer">Yes, changing either γ or M₀ produces identical qualitative changes. Both act as simple linear multipliers in K = (π/3) · γ · M. Since M ∝ M₀, doubling either γ or M₀ simply doubles K, which mathematically doubles ΔA in the timestep calculation, scaling the geometric evolution equally.</div>
+</div>
+
+<!-- Code -->
+<div class="code-section">
+<div class="theory-step">
+<div class="step-num">Step 04</div>
+<h2>Under the Hood: Weight Update</h2>
+<p>The core weight-update loop using the von Neumann–Mullins relation and numerical calibration:</p>
+</div>
+<div class="code-block"><span class="cm">// Arrhenius mobility</span>
+<span class="kw">const</span> QmJ = Qm * <span class="num">1000</span>;           <span class="cm">// kJ → J</span>
+<span class="kw">const</span> M = M0 * Math.<span class="fn">exp</span>(-QmJ / (R * T));
+<span class="kw">const</span> K = (Math.PI / <span class="num">3</span>) * gamma * M;
+
+<span class="cm">// Calibration factor (every N steps)</span>
+<span class="kw">let</span> sumDaDw = <span class="num">0</span>, count = <span class="num">0</span>;
+<span class="kw">for</span> (<span class="kw">const</span> s <span class="kw">of</span> activeSeeds) {
+  <span class="kw">const</span> areaOrig = <span class="fn">polyArea</span>(<span class="fn">computeCell</span>(seeds, s, W, H));
+  s.w += eps_w;
+  <span class="kw">const</span> areaPerturbed = <span class="fn">polyArea</span>(<span class="fn">computeCell</span>(seeds, s, W, H));
+  s.w -= eps_w;
+  <span class="kw">const</span> dadw = (areaPerturbed - areaOrig) / eps_w;
+  sumDaDw += dadw; count++;
+}
+<span class="kw">const</span> C = <span class="num">1</span> / (sumDaDw / count);  <span class="cm">// global calibration</span>
+
+<span class="cm">// von Neumann-Mullins weight update</span>
+<span class="kw">for</span> (<span class="kw">const</span> s <span class="kw">of</span> activeSeeds) {
+  <span class="kw">const</span> nSides = <span class="fn">computeCell</span>(seeds, s, W, H).length;
+  <span class="kw">const</span> dA_SI = K * (nSides - <span class="num">6</span>) * dt;    <span class="cm">// m²</span>
+  <span class="kw">const</span> dA_px = dA_SI * (<span class="num">1e6</span>/um)*(<span class="num">1e6</span>/um); <span class="cm">// → px²</span>
+  s.w += C * dA_px;
+}</div>
+</div>
+
+</div>
 </div>
 
 <script>
@@ -435,7 +588,7 @@ function simStep() {
     if (aUm < p.minA || poly.length < 3) seeds[i].active = false;
   }
 
-  // Compact array: remove inactive seeds periodically
+  // Compact array
   if (step % 50 === 0) {
     seeds = seeds.filter(s => s.active);
   }
@@ -453,6 +606,14 @@ function tick() {
   drawPlots();
   requestAnimationFrame(tick);
 }
+
+// ── Modal ─────────────────────────────────────────────────────────────
+function toggleModal() {
+  document.getElementById("modal-overlay").classList.toggle("open");
+}
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") document.getElementById("modal-overlay").classList.remove("open");
+});
 
 // ── Init ──────────────────────────────────────────────────────────────
 window.addEventListener("resize", () => { resizeCanvas(); draw(); });
