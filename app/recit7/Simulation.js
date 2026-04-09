@@ -486,97 +486,132 @@ export default function PowerVoronoiSimulation() {
   }, [doInit]);
 
   // ── Styles ──────────────────────────────────────────────────────────
-  const fieldStyle = { border: "1px solid var(--color-pencil)", borderRadius: "var(--radius-sm)", padding: "0.5rem 0.75rem", background: "white", boxShadow: "var(--shadow-soft)", marginBottom: "0.5rem" };
-  const legendStyle = { font: "700 0.7rem var(--font-sans)", color: "var(--color-amber)", padding: "0 4px", textTransform: "uppercase", letterSpacing: "0.05em" };
-  const ctrlGrid = { display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: "0.75rem", rowGap: "0.25rem" };
-  const lblStyle = { display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 4, fontSize: "0.65rem", fontWeight: 700, color: "var(--color-secondary)", textTransform: "uppercase", whiteSpace: "nowrap" };
-  const inputStyle = { fontFamily: "var(--font-mono)", fontSize: "0.75rem", padding: "2px 4px", border: "1px solid var(--color-pencil)", borderRadius: 4, background: "var(--color-cream)", color: "var(--color-charcoal)", width: "60px", textAlign: "right" };
-  const btnStyle = { fontFamily: "var(--font-mono)", fontSize: "0.75rem", fontWeight: 700, padding: "6px 12px", borderRadius: 6, border: "none", cursor: "pointer", transition: "all 0.2s" };
+  const panelBg = "white";
+  const panelBorder = "1px solid var(--color-pencil)";
+  const panelRadius = "10px";
+  const panelPad = "1rem 1.25rem";
+  const panelShadow = "0 1px 4px rgba(0,0,0,0.06)";
+
+  const cardStyle = { border: panelBorder, borderRadius: panelRadius, padding: panelPad, background: panelBg, boxShadow: panelShadow };
+  const legendStyle = { font: "700 0.7rem var(--font-sans)", color: "var(--color-amber)", padding: "0 6px", textTransform: "uppercase", letterSpacing: "0.06em" };
+  const ctrlGrid = { display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: "1rem", rowGap: "0.35rem" };
+  const lblStyle = { display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 6, fontSize: "0.68rem", fontWeight: 700, color: "var(--color-secondary)", textTransform: "uppercase", whiteSpace: "nowrap" };
+  const inputStyle = { fontFamily: "var(--font-mono)", fontSize: "0.78rem", padding: "3px 6px", border: "1px solid var(--color-pencil)", borderRadius: 5, background: "var(--color-cream)", color: "var(--color-charcoal)", width: "64px", textAlign: "right" };
+  const btnStyle = { fontFamily: "var(--font-mono)", fontSize: "0.8rem", fontWeight: 700, padding: "8px 18px", borderRadius: 8, border: "none", cursor: "pointer", transition: "all 0.15s ease" };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+    <div style={{
+      border: panelBorder,
+      borderRadius: "14px",
+      background: "var(--color-cream)",
+      boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
+      overflow: "hidden",
+    }}>
 
-      {/* Top Controls Row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
-        
-        {/* Left Column: Actions, Spread, Simulation */}
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          
-          <fieldset style={fieldStyle}>
+      {/* ─── Dashboard Top: Two Equal Columns ─── */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        alignItems: "stretch",
+        gap: 0,
+      }}>
+
+        {/* ══ Left Column: Controls ══ */}
+        <div style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem", borderRight: panelBorder }}>
+
+          {/* Actions */}
+          <fieldset style={{ ...cardStyle, margin: 0 }}>
             <legend style={legendStyle}>🎮 Actions</legend>
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-              <button onClick={() => setRunning(r => !r)} style={{ ...btnStyle, background: running ? "#E06C75" : "var(--color-amber)", color: "white" }}>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.25rem" }}>
+              <button onClick={() => setRunning(r => !r)} style={{ ...btnStyle, background: running ? "#E06C75" : "var(--color-amber)", color: "white", flex: 1 }}>
                 {running ? "⏸ Pause" : "▶ Start"}
               </button>
-              <button onClick={() => { setRunning(false); doInit(); }} style={{ ...btnStyle, background: "var(--color-cream)", color: "var(--color-charcoal)", border: "1px solid var(--color-pencil)" }}>
+              <button onClick={() => { setRunning(false); doInit(); }} style={{ ...btnStyle, background: "white", color: "var(--color-charcoal)", border: panelBorder, flex: 1 }}>
                 🔄 Reset
               </button>
             </div>
           </fieldset>
 
-          <fieldset style={fieldStyle}>
+          {/* Spread Slider */}
+          <fieldset style={{ ...cardStyle, margin: 0 }}>
             <legend style={legendStyle}>🎚️ Size Spread</legend>
-            <label style={{ ...lblStyle, gap: 6 }}>
-              Initial size spread: <strong style={{ color: "var(--color-charcoal)" }}>{spreadPct}%</strong>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.25rem" }}>
+              <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--color-charcoal)", whiteSpace: "nowrap" }}>{spreadPct}%</span>
               <input type="range" min="0" max="100" value={spreadPct}
                 onChange={e => handleSpreadChange(Number(e.target.value))}
                 style={{ width: "100%", accentColor: "var(--color-amber)" }} />
-            </label>
+            </div>
           </fieldset>
 
-          <fieldset style={fieldStyle}>
-            <legend style={legendStyle}>🔬 Simulation</legend>
-            <div style={ctrlGrid}>
+          {/* Simulation Params */}
+          <fieldset style={{ ...cardStyle, margin: 0, flexGrow: 1 }}>
+            <legend style={legendStyle}>🔬 Simulation Parameters</legend>
+            <div style={{ ...ctrlGrid, marginTop: "0.35rem" }}>
               <label style={lblStyle}>Seeds <input type="number" min="3" max="1000" value={nSeeds} onChange={e => setNSeeds(Number(e.target.value))} style={inputStyle} /></label>
-              <label style={lblStyle}>Temperature (K) <input type="number" min="1" value={temperature} onChange={e => setTemperature(Number(e.target.value))} style={inputStyle} /></label>
+              <label style={lblStyle}>T (K) <input type="number" min="1" value={temperature} onChange={e => setTemperature(Number(e.target.value))} style={inputStyle} /></label>
               <label style={lblStyle}>Q<sub>m</sub> (kJ/mol) <input type="number" value={Qm} onChange={e => setQm(Number(e.target.value))} style={inputStyle} /></label>
               <label style={lblStyle}>γ (J/m²) <input type="number" step="0.1" value={gamma} onChange={e => setGamma(Number(e.target.value))} style={inputStyle} /></label>
               <label style={lblStyle}>M₀ (m⁴/Js) <input type="text" value={M0} onChange={e => setM0(Number(e.target.value))} style={inputStyle} /></label>
               <label style={lblStyle}>µm/px <input type="number" step="0.1" min="0.01" value={umPerPx} onChange={e => setUmPerPx(Number(e.target.value))} style={inputStyle} /></label>
               <label style={lblStyle}>dt (s) <input type="number" step="0.1" min="0.01" value={dt} onChange={e => setDt(Number(e.target.value))} style={inputStyle} /></label>
-              <label style={lblStyle}>Recompute C / N <input type="number" min="1" value={recomputeN} onChange={e => setRecomputeN(Number(e.target.value))} style={inputStyle} /></label>
-              <label style={lblStyle}>ε for dA/dw <input type="number" step="0.1" value={epsW} onChange={e => setEpsW(Number(e.target.value))} style={inputStyle} /></label>
-              <label style={lblStyle}>Min area (µm²) <input type="number" step="0.5" value={minArea} onChange={e => setMinArea(Number(e.target.value))} style={inputStyle} /></label>
+              <label style={lblStyle}>C / N <input type="number" min="1" value={recomputeN} onChange={e => setRecomputeN(Number(e.target.value))} style={inputStyle} /></label>
+              <label style={lblStyle}>ε dA/dw <input type="number" step="0.1" value={epsW} onChange={e => setEpsW(Number(e.target.value))} style={inputStyle} /></label>
+              <label style={lblStyle}>Min A (µm²) <input type="number" step="0.5" value={minArea} onChange={e => setMinArea(Number(e.target.value))} style={inputStyle} /></label>
             </div>
           </fieldset>
         </div>
 
-        {/* Right Column: Statistics */}
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <fieldset style={{...fieldStyle, height: "100%", display: "flex", flexDirection: "column", marginBottom: 0}}>
-            <legend style={legendStyle}>📊 Statistics</legend>
-            <div style={{ fontSize: "0.8rem", color: "var(--color-secondary)", lineHeight: 2 }}>
-              <div>Time: <strong style={{ color: "var(--color-charcoal)" }}>{statsDisplay.time} s</strong></div>
-              <div>Active Grains: <strong style={{ color: "var(--color-charcoal)" }}>{statsDisplay.count}</strong></div>
-              <div>Mean Area: <strong style={{ color: "var(--color-charcoal)" }}>{statsDisplay.meanArea} µm²</strong></div>
-              <div>Mean Sides: <strong style={{ color: "var(--color-charcoal)" }}>{statsDisplay.meanSides}</strong></div>
-              <div style={{ fontSize: "0.7rem", marginTop: "0.25rem", fontFamily: "var(--font-mono)", color: "var(--color-secondary)" }}>
-                K={statsDisplay.K} &nbsp; M={statsDisplay.M} &nbsp; C={statsDisplay.C}
-              </div>
+        {/* ══ Right Column: Statistics & Plots ══ */}
+        <div style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+
+          <fieldset style={{ ...cardStyle, margin: 0, flexGrow: 1, display: "flex", flexDirection: "column" }}>
+            <legend style={legendStyle}>📊 Live Statistics</legend>
+
+            {/* Stat numbers in a 2×2 grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem 1.5rem", marginTop: "0.35rem" }}>
+              <div style={{ fontSize: "0.78rem", color: "var(--color-secondary)" }}>Time <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--color-charcoal)", fontFamily: "var(--font-mono)" }}>{statsDisplay.time}<span style={{ fontSize: "0.7rem", fontWeight: 500 }}> s</span></div></div>
+              <div style={{ fontSize: "0.78rem", color: "var(--color-secondary)" }}>Active Grains <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--color-charcoal)", fontFamily: "var(--font-mono)" }}>{statsDisplay.count}</div></div>
+              <div style={{ fontSize: "0.78rem", color: "var(--color-secondary)" }}>Mean Area <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--color-charcoal)", fontFamily: "var(--font-mono)" }}>{statsDisplay.meanArea}<span style={{ fontSize: "0.7rem", fontWeight: 500 }}> µm²</span></div></div>
+              <div style={{ fontSize: "0.78rem", color: "var(--color-secondary)" }}>Mean Sides <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--color-charcoal)", fontFamily: "var(--font-mono)" }}>{statsDisplay.meanSides}</div></div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "auto", flexGrow: 1, justifyContent: "flex-end", paddingTop: "1rem" }}>
-              <div style={{ width: "100%" }}>
-                <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--color-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 3 }}>Mean Area</div>
-                <canvas ref={plotAreaRef} width="400" height="120" style={{ width: "100%", height: 120, borderRadius: 6, display: "block" }} />
+
+            {/* K / M / C compact row */}
+            <div style={{ fontSize: "0.65rem", marginTop: "0.5rem", fontFamily: "var(--font-mono)", color: "var(--color-secondary)", borderTop: "1px solid var(--color-pencil)", paddingTop: "0.4rem" }}>
+              K = {statsDisplay.K} &nbsp;&nbsp; M = {statsDisplay.M} &nbsp;&nbsp; C = {statsDisplay.C}
+            </div>
+          </fieldset>
+
+          {/* Plots */}
+          <fieldset style={{ ...cardStyle, margin: 0, flexGrow: 1, display: "flex", flexDirection: "column" }}>
+            <legend style={legendStyle}>📈 Live Plots</legend>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", flexGrow: 1, marginTop: "0.25rem" }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "0.62rem", fontWeight: 700, color: "var(--color-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 3 }}>Mean Area (µm²)</div>
+                <canvas ref={plotAreaRef} width="400" height="100" style={{ width: "100%", height: "100%", minHeight: 80, borderRadius: 6, display: "block" }} />
               </div>
-              <div style={{ width: "100%" }}>
-                <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--color-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 3 }}>Grain Count</div>
-                <canvas ref={plotCountRef} width="400" height="120" style={{ width: "100%", height: 120, borderRadius: 6, display: "block" }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "0.62rem", fontWeight: 700, color: "var(--color-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 3 }}>Grain Count</div>
+                <canvas ref={plotCountRef} width="400" height="100" style={{ width: "100%", height: "100%", minHeight: 80, borderRadius: 6, display: "block" }} />
               </div>
             </div>
           </fieldset>
         </div>
       </div>
 
-      {/* Canvas */}
-      <div style={{ width: "100%" }}>
-        <div className="polaroid" style={{ margin: 0, width: "100%" }}>
-          <div style={{ width: "100%", overflow: "hidden", background: "#1E222A", borderRadius: "2px" }}>
-            <canvas ref={canvasRef} style={{ display: "block", width: "100%" }} />
-          </div>
-          <div className="polaroid-caption">
-            Power-Voronoi Grain Growth · {seedsRef.current ? seedsRef.current.filter(s => s.active).length : nSeeds} Grains
-          </div>
+      {/* ─── Full-Width Canvas ─── */}
+      <div style={{ borderTop: panelBorder, background: "#1E222A" }}>
+        <canvas ref={canvasRef} style={{ display: "block", width: "100%" }} />
+        <div style={{
+          textAlign: "center",
+          padding: "0.5rem",
+          fontSize: "0.75rem",
+          fontStyle: "italic",
+          fontFamily: "var(--font-serif)",
+          color: "var(--color-secondary)",
+          background: "var(--color-cream)",
+          borderTop: panelBorder,
+        }}>
+          Power-Voronoi Grain Growth · {seedsRef.current ? seedsRef.current.filter(s => s.active).length : nSeeds} Grains
         </div>
       </div>
     </div>
