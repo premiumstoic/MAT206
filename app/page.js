@@ -61,6 +61,16 @@ const assignments = [
     featured: true,
     image: "/images/grain_growth_card.png",
   },
+  {
+    week: 7,
+    slug: "recit7",
+    title: "Power-Voronoi Growth",
+    description:
+      "Simulate geometric grain coarsening with power-Voronoi tessellation, von Neumann–Mullins kinetics, and Arrhenius mobility.",
+    status: "active",
+    featured: true,
+    image: "/images/power_voronoi_card.png",
+  },
 ];
 
 function StatusBadge({ status }) {
