@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Power-Voronoi Grain Growth Simulation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#1a1d23;color:#c8ccd4}
+#app{display:flex;width:100%;height:100%}
+
+/* Left Panel */
+#panel{width:340px;min-width:340px;height:100%;overflow-y:auto;background:#21252b;border-right:1px solid #333842;display:flex;flex-direction:column;gap:6px;padding:10px}
+#panel::-webkit-scrollbar{width:4px}
+#panel::-webkit-scrollbar-thumb{background:#444;border-radius:4px}
+
+fieldset{border:1px solid #333842;border-radius:8px;padding:8px 10px;background:#282c34}
+legend{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#e5c07b;padding:0 6px}
+
+.btn-row{display:flex;gap:6px}
+.btn{font-family:inherit;font-size:.78rem;font-weight:700;padding:7px 0;border:none;border-radius:6px;cursor:pointer;flex:1;transition:background .15s,transform .1s}
+.btn:active{transform:scale(.97)}
+.btn-start{background:#98c379;color:#1a1d23}
+.btn-start.running{background:#e06c75}
+.btn-reset{background:#3e4451;color:#abb2bf;border:1px solid #4b5263}
+.btn-reset:hover{background:#4b5263}
+
+.spread-row{display:flex;align-items:center;gap:8px;margin-top:4px}
+.spread-val{font-size:.8rem;font-weight:700;color:#e5c07b;min-width:34px;text-align:right}
+input[type=range]{flex:1;accent-color:#e5c07b;height:6px}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;column-gap:10px;row-gap:3px;margin-top:4px}
+.ctrl{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.ctrl-label{font-size:.62rem;font-weight:700;text-transform:uppercase;color:#7f848e;white-space:nowrap}
+.ctrl input[type=number],.ctrl input[type=text]{width:58px;text-align:right;font-family:'Cascadia Code','Fira Code',monospace;font-size:.74rem;padding:2px 5px;border:1px solid #3e4451;border-radius:4px;background:#1a1d23;color:#abb2bf;outline:none}
+.ctrl input:focus{border-color:#e5c07b}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:4px}
+.stat-box{font-size:.72rem;color:#7f848e}
+.stat-val{font-size:1rem;font-weight:800;color:#c8ccd4;font-family:'Cascadia Code','Fira Code',monospace}
+.stat-unit{font-size:.65rem;font-weight:400;color:#7f848e}
+.kmc{font-size:.6rem;font-family:'Cascadia Code','Fira Code',monospace;color:#5c6370;border-top:1px solid #333842;padding-top:4px;margin-top:4px}
+
+/* Plots */
+.plot-label{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#5c6370;margin-bottom:2px}
+.plot-canvas{width:100%;height:70px;border-radius:4px;display:block;background:#1a1d23}
+
+/* Right Panel (Canvas) */
+#canvas-wrap{flex:1;display:flex;flex-direction:column;background:#1e222a}
+#simCanvas{flex:1;display:block;width:100%;height:100%}
+#caption{text-align:center;padding:4px;font-size:.72rem;font-style:italic;color:#5c6370;background:#21252b;border-top:1px solid #333842}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- Left Panel -->
+<div id="panel">
+
+<fieldset>
+<legend>🎮 Actions</legend>
+<div class="btn-row">
+<button class="btn btn-start" id="btnStart" onclick="toggleRun()">▶ Start</button>
+<button class="btn btn-reset" onclick="doReset()">🔄 Reset</button>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>🎚️ Size Spread</legend>
+<div class="spread-row">
+<span class="spread-val" id="spreadVal">30%</span>
+<input type="range" id="spreadSlider" min="0" max="100" value="30" oninput="onSpreadChange(this.value)">
+</div>
+</fieldset>
+
+<fieldset>
+<legend>🔬 Simulation Parameters</legend>
+<div class="grid">
+<div class="ctrl"><span class="ctrl-label">Seeds</span><input type="number" id="inSeeds" value="300" min="3" max="1000"></div>
+<div class="ctrl"><span class="ctrl-label">T (K)</span><input type="number" id="inTemp" value="1173" min="1"></div>
+<div class="ctrl"><span class="ctrl-label">Qm (kJ/mol)</span><input type="number" id="inQm" value="200"></div>
+<div class="ctrl"><span class="ctrl-label">γ (J/m²)</span><input type="number" id="inGamma" value="0.7" step="0.1"></div>
+<div class="ctrl"><span class="ctrl-label">M₀ (m⁴/Js)</span><input type="text" id="inM0" value="1e-4"></div>
+<div class="ctrl"><span class="ctrl-label">µm/px</span><input type="number" id="inUm" value="1.0" step="0.1" min="0.01"></div>
+<div class="ctrl"><span class="ctrl-label">dt (s)</span><input type="number" id="inDt" value="1.0" step="0.1" min="0.01"></div>
+<div class="ctrl"><span class="ctrl-label">C / N</span><input type="number" id="inCN" value="10" min="1"></div>
+<div class="ctrl"><span class="ctrl-label">ε dA/dw</span><input type="number" id="inEps" value="1.0" step="0.1"></div>
+<div class="ctrl"><span class="ctrl-label">Min A (µm²)</span><input type="number" id="inMinA" value="5.0" step="0.5"></div>
+<div class="ctrl"><span class="ctrl-label">Max Seeds</span><input type="number" id="inMax" value="1000" min="10"></div>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>📊 Live Statistics</legend>
+<div class="stats-grid">
+<div class="stat-box">Time<div class="stat-val" id="sTime">0.0<span class="stat-unit"> s</span></div></div>
+<div class="stat-box">Active Grains<div class="stat-val" id="sCount">300</div></div>
+<div class="stat-box">Mean Area<div class="stat-val" id="sArea">0.0<span class="stat-unit"> µm²</span></div></div>
+<div class="stat-box">Mean Sides<div class="stat-val" id="sSides">0.00</div></div>
+</div>
+<div class="kmc" id="sKMC">K = 0  M = 0  C = 1</div>
+</fieldset>
+
+<fieldset>
+<legend>📈 Live Plots</legend>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div>
+<div class="plot-label">Mean Area (µm²)</div>
+<canvas id="plotArea" class="plot-canvas" width="320" height="70"></canvas>
+</div>
+<div>
+<div class="plot-label">Grain Count</div>
+<canvas id="plotCount" class="plot-canvas" width="320" height="70"></canvas>
+</div>
+</div>
+</fieldset>
+
+</div>
+
+<!-- Right Panel: Canvas -->
+<div id="canvas-wrap">
+<canvas id="simCanvas"></canvas>
+<div id="caption">Power-Voronoi Grain Growth · 300 Grains</div>
+</div>
+
+</div>
+
+<script>
+// ── Constants ─────────────────────────────────────────────────────────
+const R_GAS = 8.31446261815324;
+const COLORS = [
+  "#E06C75","#61AFEF","#98C379","#D19A66","#C678DD","#56B6C2",
+  "#E5C07B","#BE5046","#7EC8E3","#A3BE8C","#EBCB8B","#B48EAD",
+  "#88C0D0","#BF616A","#D08770","#5E81AC","#8FBCBB","#A3507A",
+  "#4C9A8F","#CF9E6E","#6C8EBF","#D4A5A5","#9ACD32","#FF7F50",
+  "#87CEEB","#DDA0DD","#F0E68C","#20B2AA","#FF6347","#778899",
+];
+
+// ── State ─────────────────────────────────────────────────────────────
+let seeds = [];
+let running = false;
+let simTime = 0;
+let step = 0;
+let calibC = 1;
+let statsK = 0, statsM = 0;
+const history = { time: [], meanArea: [], count: [] };
+
+// ── DOM refs ──────────────────────────────────────────────────────────
+const canvas = document.getElementById("simCanvas");
+const ctx = canvas.getContext("2d");
+const plotAreaC = document.getElementById("plotArea");
+const plotCountC = document.getElementById("plotCount");
+const caption = document.getElementById("caption");
+const btnStart = document.getElementById("btnStart");
+
+// ── Params ────────────────────────────────────────────────────────────
+function P() {
+  return {
+    nSeeds: +document.getElementById("inSeeds").value,
+    T: +document.getElementById("inTemp").value,
+    Qm: +document.getElementById("inQm").value,
+    gamma: +document.getElementById("inGamma").value,
+    M0: +document.getElementById("inM0").value,
+    um: +document.getElementById("inUm").value,
+    dt: +document.getElementById("inDt").value,
+    cn: +document.getElementById("inCN").value,
+    eps: +document.getElementById("inEps").value,
+    minA: +document.getElementById("inMinA").value,
+    maxS: +document.getElementById("inMax").value,
+    spread: +document.getElementById("spreadSlider").value,
+  };
+}
+
+// ── Sutherland-Hodgman Clipping ───────────────────────────────────────
+function clipByBisector(poly, xi, yi, wi, xj, yj, wj) {
+  if (!poly.length) return [];
+  const a = 2 * (xj - xi), b = 2 * (yj - yi);
+  const rhs = (xj*xj + yj*yj - wj) - (xi*xi + yi*yi - wi);
+  const out = [];
+  for (let k = 0; k < poly.length; k++) {
+    const c = poly[k], n = poly[(k+1)%poly.length];
+    const cv = a*c[0] + b*c[1] - rhs;
+    const nv = a*n[0] + b*n[1] - rhs;
+    if (cv <= 0) {
+      out.push(c);
+      if (nv > 0) { const t = cv/(cv-nv); out.push([c[0]+t*(n[0]-c[0]), c[1]+t*(n[1]-c[1])]); }
+    } else if (nv <= 0) {
+      const t = cv/(cv-nv); out.push([c[0]+t*(n[0]-c[0]), c[1]+t*(n[1]-c[1])]);
+    }
+  }
+  return out;
+}
+
+function computeCell(i, W, H) {
+  let poly = [[0,0],[W,0],[W,H],[0,H]];
+  const si = seeds[i];
+  for (let j = 0; j < seeds.length; j++) {
+    if (j === i || !seeds[j].active) continue;
+    poly = clipByBisector(poly, si.x, si.y, si.w, seeds[j].x, seeds[j].y, seeds[j].w);
+    if (!poly.length) return [];
+  }
+  return poly;
+}
+
+function polyArea(p) {
+  let a = 0;
+  for (let i = 0; i < p.length; i++) { const j=(i+1)%p.length; a += p[i][0]*p[j][1] - p[j][0]*p[i][1]; }
+  return Math.abs(a)/2;
+}
+
+function polyCentroid(p) {
+  let cx=0,cy=0,a=0;
+  for (let i = 0; i < p.length; i++) {
+    const j=(i+1)%p.length;
+    const cr = p[i][0]*p[j][1] - p[j][0]*p[i][1];
+    cx += (p[i][0]+p[j][0])*cr; cy += (p[i][1]+p[j][1])*cr; a += cr;
+  }
+  a /= 2; if (Math.abs(a)<1e-12) return [0,0];
+  return [cx/(6*a), cy/(6*a)];
+}
+
+// ── Initialization ────────────────────────────────────────────────────
+function initSeeds(sp) {
+  const W = canvas.width, H = canvas.height;
+  const p = P();
+  const n = Math.min(p.nSeeds, p.maxS);
+  const relSpread = (sp !== undefined ? sp : p.spread) / 100;
+  const meanCA = (W*H)/n;
+  const cols = Math.round(Math.sqrt(n*(W/H)));
+  const rows = Math.round(n/cols);
+  const dx = W/cols, dy = H/rows;
+  seeds = [];
+  let id = 0;
+  for (let r = 0; r < rows && seeds.length < n; r++) {
+    for (let c = 0; c < cols && seeds.length < n; c++) {
+      const jx = (Math.random()-.5)*dx*.6, jy = (Math.random()-.5)*dy*.6;
+      const x = Math.max(1, Math.min(W-1, dx*(c+.5)+jx));
+      const y = Math.max(1, Math.min(H-1, dy*(r+.5)+jy));
+      const w = (Math.random()*2-1)*relSpread*meanCA;
+      seeds.push({ x, y, w, color: COLORS[id%COLORS.length], active: true, id: id++ });
+    }
+  }
+  while (seeds.length < n) {
+    const x = Math.random()*W, y = Math.random()*H;
+    const w = (Math.random()*2-1)*relSpread*meanCA;
+    seeds.push({ x, y, w, color: COLORS[seeds.length%COLORS.length], active: true, id: id++ });
+  }
+}
+
+function resizeCanvas() {
+  const wrap = document.getElementById("canvas-wrap");
+  const cap = document.getElementById("caption");
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight - cap.offsetHeight;
+}
+
+function doReset() {
+  running = false;
+  btnStart.textContent = "▶ Start";
+  btnStart.classList.remove("running");
+  simTime = 0; step = 0; calibC = 1;
+  history.time.length = 0; history.meanArea.length = 0; history.count.length = 0;
+  resizeCanvas();
+  initSeeds();
+  updateStats();
+  draw();
+  drawPlots();
+}
+
+function onSpreadChange(val) {
+  document.getElementById("spreadVal").textContent = val + "%";
+  running = false;
+  btnStart.textContent = "▶ Start";
+  btnStart.classList.remove("running");
+  simTime = 0; step = 0; calibC = 1;
+  history.time.length = 0; history.meanArea.length = 0; history.count.length = 0;
+  initSeeds(+val);
+  updateStats();
+  draw();
+  drawPlots();
+}
+
+function toggleRun() {
+  running = !running;
+  if (running) {
+    btnStart.textContent = "⏸ Pause";
+    btnStart.classList.add("running");
+    requestAnimationFrame(tick);
+  } else {
+    btnStart.textContent = "▶ Start";
+    btnStart.classList.remove("running");
+  }
+}
+
+// ── Drawing ───────────────────────────────────────────────────────────
+function draw() {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = "#1e222a";
+  ctx.fillRect(0,0,W,H);
+
+  for (let i = 0; i < seeds.length; i++) {
+    if (!seeds[i].active) continue;
+    const poly = computeCell(i, W, H);
+    if (poly.length < 3) continue;
+
+    ctx.fillStyle = seeds[i].color;
+    ctx.beginPath();
+    ctx.moveTo(poly[0][0], poly[0][1]);
+    for (let k = 1; k < poly.length; k++) ctx.lineTo(poly[k][0], poly[k][1]);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(0,0,0,0.45)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    const [cx, cy] = polyCentroid(poly);
+    const nSides = poly.length;
+    ctx.font = "bold 10px 'Cascadia Code','Fira Code',monospace";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 2.5;
+    ctx.strokeText(nSides, cx, cy);
+    ctx.fillStyle = "#1e222a";
+    ctx.fillText(nSides, cx, cy);
+  }
+
+  const activeCount = seeds.filter(s => s.active).length;
+  caption.textContent = "Power-Voronoi Grain Growth · " + activeCount + " Grains";
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────
+function updateStats() {
+  const W = canvas.width, H = canvas.height;
+  const p = P();
+  const active = seeds.filter(s => s.active);
+  const count = active.length;
+  if (!count) return;
+
+  let totalSides = 0, totalArea = 0;
+  for (const s of active) {
+    const idx = seeds.indexOf(s);
+    const poly = computeCell(idx, W, H);
+    totalSides += poly.length;
+    totalArea += polyArea(poly);
+  }
+  const meanAPx = totalArea / count;
+  const meanAUm = meanAPx * p.um * p.um;
+  const meanSides = totalSides / count;
+
+  history.time.push(simTime);
+  history.meanArea.push(meanAUm);
+  history.count.push(count);
+  if (history.time.length > 500) { history.time.shift(); history.meanArea.shift(); history.count.shift(); }
+
+  document.getElementById("sTime").innerHTML = simTime.toFixed(1) + '<span class="stat-unit"> s</span>';
+  document.getElementById("sCount").textContent = count;
+  document.getElementById("sArea").innerHTML = meanAUm.toFixed(1) + '<span class="stat-unit"> µm²</span>';
+  document.getElementById("sSides").textContent = meanSides.toFixed(2);
+  document.getElementById("sKMC").textContent =
+    "K = " + statsK.toExponential(2) + "   M = " + statsM.toExponential(2) + "   C = " + calibC.toExponential(2);
+}
+
+// ── Plots ─────────────────────────────────────────────────────────────
+function drawPlot(cv, vals, color) {
+  if (vals.length < 2) return;
+  const c = cv.getContext("2d");
+  const W = cv.width, H = cv.height;
+  c.clearRect(0,0,W,H);
+  c.fillStyle = "#1a1d23"; c.fillRect(0,0,W,H);
+  const mn = Math.min(...vals), mx = Math.max(...vals), rng = mx-mn||1;
+  c.strokeStyle = color; c.lineWidth = 1.5;
+  c.beginPath();
+  for (let i = 0; i < vals.length; i++) {
+    const x = (i/(vals.length-1))*W;
+    const y = H - ((vals[i]-mn)/rng)*(H-8) - 4;
+    i===0 ? c.moveTo(x,y) : c.lineTo(x,y);
+  }
+  c.stroke();
+}
+function drawPlots() {
+  drawPlot(plotAreaC, history.meanArea, "#98c379");
+  drawPlot(plotCountC, history.count, "#e06c75");
+}
+
+// ── Simulation Step ───────────────────────────────────────────────────
+function simStep() {
+  const W = canvas.width, H = canvas.height;
+  const p = P();
+
+  const QmJ = p.Qm * 1000;
+  const M = p.M0 * Math.exp(-QmJ / (R_GAS * p.T));
+  const K = (Math.PI / 3) * p.gamma * M;
+  statsK = K; statsM = M;
+
+  // Recompute C
+  if (step % p.cn === 0) {
+    const active = seeds.filter(s => s.active);
+    if (active.length) {
+      let sumDaDw = 0, vc = 0;
+      for (const s of active) {
+        const idx = seeds.indexOf(s);
+        const a0 = polyArea(computeCell(idx, W, H));
+        const ow = s.w; s.w = ow + p.eps;
+        const a1 = polyArea(computeCell(idx, W, H));
+        s.w = ow;
+        const d = (a1 - a0) / p.eps;
+        if (Math.abs(d) > 1e-12) { sumDaDw += d; vc++; }
+      }
+      if (vc) {
+        const md = sumDaDw / vc;
+        if (Math.abs(md) > 1e-12) calibC = 0.8 * calibC + 0.2 * (1/md);
+      }
+    }
+  }
+
+  // Update weights
+  const active = seeds.filter(s => s.active);
+  for (const s of active) {
+    const idx = seeds.indexOf(s);
+    const poly = computeCell(idx, W, H);
+    const nSides = poly.length;
+    if (nSides < 3) continue;
+    const dA_SI = K * (nSides - 6) * p.dt;
+    const dA_px = dA_SI * (1e6/p.um) * (1e6/p.um);
+    s.w += calibC * dA_px;
+  }
+
+  // Remove dead grains
+  for (let i = seeds.length - 1; i >= 0; i--) {
+    if (!seeds[i].active) continue;
+    const poly = computeCell(i, canvas.width, canvas.height);
+    const aUm = polyArea(poly) * p.um * p.um;
+    if (aUm < p.minA || poly.length < 3) seeds[i].active = false;
+  }
+
+  // Compact array: remove inactive seeds periodically
+  if (step % 50 === 0) {
+    seeds = seeds.filter(s => s.active);
+  }
+
+  simTime += p.dt;
+  step++;
+}
+
+// ── Animation Loop ────────────────────────────────────────────────────
+function tick() {
+  if (!running) return;
+  simStep();
+  updateStats();
+  draw();
+  drawPlots();
+  requestAnimationFrame(tick);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+window.addEventListener("resize", () => { resizeCanvas(); draw(); });
+resizeCanvas();
+initSeeds();
+updateStats();
+draw();
+drawPlots();
+</script>
+</body>
+</html>
