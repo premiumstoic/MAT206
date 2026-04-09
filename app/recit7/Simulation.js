@@ -486,18 +486,18 @@ export default function PowerVoronoiSimulation() {
   }, [doInit]);
 
   // ── Styles ──────────────────────────────────────────────────────────
-  const fieldStyle = { border: "1px solid var(--color-pencil)", borderRadius: "var(--radius-md)", padding: "1.25rem", background: "white", boxShadow: "var(--shadow-soft)", marginBottom: "1rem" };
-  const legendStyle = { font: "700 0.8rem var(--font-sans)", color: "var(--color-amber)", padding: "0 6px", textTransform: "uppercase", letterSpacing: "0.06em" };
-  const ctrlGrid = { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.75rem" };
-  const lblStyle = { display: "flex", flexDirection: "column", gap: 4, fontSize: "0.7rem", fontWeight: 700, color: "var(--color-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" };
-  const inputStyle = { fontFamily: "var(--font-mono)", fontSize: "0.82rem", padding: "5px 7px", border: "1px solid var(--color-pencil)", borderRadius: 6, background: "var(--color-cream)", color: "var(--color-charcoal)", width: "100%" };
-  const btnStyle = { fontFamily: "var(--font-mono)", fontSize: "0.8rem", fontWeight: 700, padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer", transition: "all 0.2s" };
+  const fieldStyle = { border: "1px solid var(--color-pencil)", borderRadius: "var(--radius-sm)", padding: "0.5rem 0.75rem", background: "white", boxShadow: "var(--shadow-soft)", marginBottom: "0.5rem" };
+  const legendStyle = { font: "700 0.7rem var(--font-sans)", color: "var(--color-amber)", padding: "0 4px", textTransform: "uppercase", letterSpacing: "0.05em" };
+  const ctrlGrid = { display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: "0.75rem", rowGap: "0.25rem" };
+  const lblStyle = { display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 4, fontSize: "0.65rem", fontWeight: 700, color: "var(--color-secondary)", textTransform: "uppercase", whiteSpace: "nowrap" };
+  const inputStyle = { fontFamily: "var(--font-mono)", fontSize: "0.75rem", padding: "2px 4px", border: "1px solid var(--color-pencil)", borderRadius: 4, background: "var(--color-cream)", color: "var(--color-charcoal)", width: "60px", textAlign: "right" };
+  const btnStyle = { fontFamily: "var(--font-mono)", fontSize: "0.75rem", fontWeight: 700, padding: "6px 12px", borderRadius: 6, border: "none", cursor: "pointer", transition: "all 0.2s" };
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "2rem", alignItems: "flex-start" }}>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "1.5rem", alignItems: "flex-start" }}>
 
       {/* Controls */}
-      <div style={{ flex: "1 1 300px", minWidth: 280, maxWidth: 360 }}>
+      <div style={{ flex: "1 1 240px", minWidth: 230, maxWidth: 320 }}>
 
         <fieldset style={fieldStyle}>
           <legend style={legendStyle}>🎮 Actions</legend>
@@ -562,7 +562,7 @@ export default function PowerVoronoiSimulation() {
       </div>
 
       {/* Canvas */}
-      <div style={{ flex: "1 1 500px", minWidth: 300, position: "sticky", top: "2rem" }}>
+      <div style={{ flex: "1 1 400px", minWidth: 240, position: "sticky", top: "2rem" }}>
         <div className="polaroid" style={{ margin: 0, width: "100%" }}>
           <div style={{ width: "100%", overflow: "hidden", background: "#1E222A", borderRadius: "2px" }}>
             <canvas ref={canvasRef} style={{ display: "block", width: "100%" }} />
