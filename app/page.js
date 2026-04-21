@@ -71,6 +71,16 @@ const assignments = [
     featured: true,
     image: "/images/power_voronoi_card.png",
   },
+  {
+    week: 10,
+    slug: "recit10",
+    title: "Ostwald Ripening",
+    description:
+      "Model mean-field coarsening of circular particles driven by curvature, critical radius, and Arrhenius kinetics.",
+    status: "active",
+    featured: true,
+    image: "/images/ostwald_ripening_card.png",
+  },
 ];
 
 function StatusBadge({ status }) {
