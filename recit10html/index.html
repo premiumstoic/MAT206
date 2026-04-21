@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ostwald Ripening Simulation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#1a1d23;color:#c8ccd4}
+#app{display:flex;width:100%;height:100%}
+#panel{width:340px;min-width:340px;height:100%;overflow-y:auto;background:#21252b;border-right:1px solid #333842;display:flex;flex-direction:column;gap:6px;padding:10px}
+#panel::-webkit-scrollbar{width:4px}
+#panel::-webkit-scrollbar-thumb{background:#444;border-radius:4px}
+fieldset{border:1px solid #333842;border-radius:8px;padding:8px 10px;background:#282c34}
+legend{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#e5c07b;padding:0 6px}
+.btn-row{display:flex;gap:6px}
+.btn{font-family:inherit;font-size:.78rem;font-weight:700;padding:7px 0;border:none;border-radius:6px;cursor:pointer;flex:1;transition:background .15s,transform .1s}
+.btn:active{transform:scale(.97)}
+.btn-start{background:#98c379;color:#1a1d23}
+.btn-start.running{background:#e06c75}
+.btn-reset{background:#3e4451;color:#abb2bf;border:1px solid #4b5263}
+.btn-reset:hover{background:#4b5263}
+.grid{display:grid;grid-template-columns:1fr 1fr;column-gap:10px;row-gap:3px;margin-top:4px}
+.ctrl{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.ctrl-label{font-size:.62rem;font-weight:700;text-transform:uppercase;color:#7f848e;white-space:nowrap}
+.ctrl input[type=number],.ctrl input[type=text]{width:58px;text-align:right;font-family:'Cascadia Code','Fira Code',monospace;font-size:.74rem;padding:2px 5px;border:1px solid #3e4451;border-radius:4px;background:#1a1d23;color:#abb2bf;outline:none}
+.ctrl input:focus{border-color:#e5c07b}
+.chk-row{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:.68rem;font-weight:700;color:#7f848e;text-transform:uppercase}
+.chk-row input{accent-color:#e5c07b}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:4px}
+.stat-box{font-size:.72rem;color:#7f848e}
+.stat-val{font-size:1rem;font-weight:800;color:#c8ccd4;font-family:'Cascadia Code','Fira Code',monospace}
+.stat-unit{font-size:.65rem;font-weight:400;color:#7f848e}
+.kmc{font-size:.6rem;font-family:'Cascadia Code','Fira Code',monospace;color:#5c6370;border-top:1px solid #333842;padding-top:4px;margin-top:4px}
+.plot-label{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#5c6370;margin-bottom:2px}
+.plot-canvas{width:100%;height:70px;border-radius:4px;display:block;background:#1a1d23}
+.btn-theory{width:100%;font-family:inherit;font-size:.8rem;font-weight:700;padding:9px 0;border:none;border-radius:8px;cursor:pointer;background:linear-gradient(135deg,#e5c07b,#d19a66);color:#1a1d23;transition:all .15s;margin-top:4px}
+.btn-theory:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-theory:active{transform:scale(.98)}
+#canvas-wrap{flex:1;display:flex;flex-direction:column;background:#1e222a}
+#simCanvas{flex:1;display:block;width:100%;height:100%}
+#caption{text-align:center;padding:4px;font-size:.72rem;font-style:italic;color:#5c6370;background:#21252b;border-top:1px solid #333842}
+#modal-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(10,12,16,0.85);backdrop-filter:blur(8px);overflow-y:auto}
+#modal-overlay.open{display:block}
+#modal-inner{max-width:820px;margin:2rem auto;padding:2.5rem 2rem 3rem;background:#21252b;border-radius:16px;border:1px solid #333842;box-shadow:0 8px 40px rgba(0,0,0,0.5);position:relative}
+#modal-inner h1{font-size:1.8rem;font-weight:800;color:#e5c07b;margin-bottom:.25rem}
+#modal-inner .subtitle{font-size:.9rem;color:#7f848e;margin-bottom:2rem;font-style:italic}
+.close-btn{position:sticky;top:0;float:right;background:#3e4451;border:1px solid #4b5263;color:#abb2bf;font-size:.8rem;font-weight:700;padding:6px 14px;border-radius:6px;cursor:pointer;z-index:10}
+.close-btn:hover{background:#4b5263;color:#fff}
+.theory-step{margin-bottom:2rem;padding-left:1.25rem;border-left:3px solid #e5c07b}
+.theory-step .step-num{font-size:.7rem;font-weight:800;color:#e5c07b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem}
+.theory-step h2{font-size:1.15rem;font-weight:700;color:#c8ccd4;margin-bottom:.5rem}
+.theory-step p{font-size:.88rem;color:#abb2bf;line-height:1.7;margin-bottom:.5rem}
+.eq-pill{display:inline-block;background:#282c34;border:1px solid #3e4451;border-radius:6px;padding:6px 16px;font-family:'Cascadia Code','Fira Code',monospace;font-size:.82rem;color:#98c379;margin:.75rem 0}
+.eq-center{text-align:center;margin:.75rem 0}
+.q-section-title{font-size:1.2rem;font-weight:800;color:#c8ccd4;margin:2rem 0 .5rem;padding-top:1.5rem;border-top:1px solid #333842}
+.q-card{background:#282c34;border:1px solid #3e4451;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1rem}
+.q-badge{display:inline-block;font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#e5c07b;background:#3e4451;padding:3px 10px;border-radius:20px;margin-bottom:.5rem}
+.q-text{font-size:.9rem;font-weight:600;color:#c8ccd4;margin-bottom:.5rem}
+.q-answer{font-size:.84rem;color:#7f848e;line-height:1.65}
+.q-answer strong{color:#abb2bf}
+.code-section{margin-top:2rem;padding-top:1.5rem;border-top:1px solid #333842}
+.code-block{background:#1a1d23;border:1px solid #333842;border-radius:8px;padding:1rem;font-family:'Cascadia Code','Fira Code',monospace;font-size:.75rem;color:#abb2bf;overflow-x:auto;white-space:pre;line-height:1.6}
+.code-block .kw{color:#c678dd}.code-block .cm{color:#5c6370;font-style:italic}.code-block .fn{color:#61afef}.code-block .num{color:#d19a66}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="panel">
+<fieldset><legend>🎮 Actions</legend>
+<div class="btn-row">
+<button class="btn btn-start" id="btnStart" onclick="toggleRun()">▶ Start</button>
+<button class="btn btn-reset" onclick="doReset()">🔄 Reset</button>
+</div></fieldset>
+
+<fieldset><legend>🔬 Parameters</legend>
+<div class="grid">
+<div class="ctrl"><span class="ctrl-label">N</span><input type="number" id="inN" value="200" min="2" max="2000"></div>
+<div class="ctrl"><span class="ctrl-label">T (K)</span><input type="number" id="inT" value="1000" min="1"></div>
+<div class="ctrl"><span class="ctrl-label">R min</span><input type="number" id="inRmin" value="2" step="0.5" min="0.5"></div>
+<div class="ctrl"><span class="ctrl-label">R max</span><input type="number" id="inRmax" value="15" step="1" min="1"></div>
+<div class="ctrl"><span class="ctrl-label">R threshold</span><input type="number" id="inRth" value="1.0" step="0.1" min="0.1"></div>
+<div class="ctrl"><span class="ctrl-label">M₀</span><input type="number" id="inM0" value="500"></div>
+<div class="ctrl"><span class="ctrl-label">Q (eV)</span><input type="number" id="inQ" value="0.5" step="0.1"></div>
+<div class="ctrl"><span class="ctrl-label">dt</span><input type="number" id="inDt" value="0.5" step="0.1" min="0.01"></div>
+</div>
+<label class="chk-row"><input type="checkbox" id="chkBrown" checked> Brownian Jiggle</label>
+</fieldset>
+
+<fieldset><legend>📊 Live Statistics</legend>
+<div class="stats-grid">
+<div class="stat-box">Time<div class="stat-val" id="sTime">0.0<span class="stat-unit"> s</span></div></div>
+<div class="stat-box">Active<div class="stat-val" id="sCount">200</div></div>
+<div class="stat-box">Avg Radius<div class="stat-val" id="sAvg">0.0<span class="stat-unit"> px</span></div></div>
+<div class="stat-box">Critical R<sub>c</sub><div class="stat-val" id="sRc">0.0<span class="stat-unit"> px</span></div></div>
+</div>
+<div class="kmc" id="sMob">M = 0</div>
+</fieldset>
+
+<fieldset><legend>📈 Live Plots</legend>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div><div class="plot-label"><span style="color:#98c379">■</span> Avg R &nbsp;<span style="color:#e5c07b">■</span> R<sub>c</sub></div>
+<canvas id="plotR" class="plot-canvas" width="320" height="70"></canvas></div>
+<div><div class="plot-label">Particle Count</div>
+<canvas id="plotN" class="plot-canvas" width="320" height="70"></canvas></div>
+</div></fieldset>
+
+<button class="btn-theory" onclick="toggleModal()">📖 Theory &amp; Questions</button>
+</div>
+
+<div id="canvas-wrap">
+<canvas id="simCanvas"></canvas>
+<div id="caption">Ostwald Ripening · 200 Particles</div>
+</div>
+</div>
+
+<!-- Modal -->
+<div id="modal-overlay" onclick="if(event.target===this)toggleModal()">
+<div id="modal-inner">
+<button class="close-btn" onclick="toggleModal()">✕ Close</button>
+<h1>Ostwald Ripening</h1>
+<p class="subtitle">Mean-field coarsening of circular particles driven by curvature and Arrhenius kinetics.</p>
+
+<div class="theory-step"><div class="step-num">Step 01</div><h2>Thermodynamics &amp; Kinetics</h2>
+<p>Atomic mobility follows the <strong>Arrhenius equation</strong> with k<sub>B</sub> = 8.617×10<sup>−5</sup> eV/K:</p>
+<div class="eq-center"><span class="eq-pill">M(T) = M₀ · exp(−Q / k<sub>B</sub>T)</span></div>
+<p>The <strong>critical radius</strong> is the harmonic mean of all particle radii:</p>
+<div class="eq-center"><span class="eq-pill">R<sub>c</sub> = ( (1/N) · Σ(1/r<sub>i</sub>) )<sup>−1</sup></span></div>
+<p>The rate of change follows the diffusion-controlled growth law:</p>
+<div class="eq-center"><span class="eq-pill">dr<sub>i</sub>/dt = (M / r<sub>i</sub>²) · (r<sub>i</sub> / R<sub>c</sub> − 1)</span></div>
+<p>Particles with r > R<sub>c</sub> grow, while those with r &lt; R<sub>c</sub> shrink and dissolve.</p></div>
+
+<div class="theory-step"><div class="step-num">Step 02</div><h2>Numerical Substepping</h2>
+<p>The 1/r<sub>i</sub>² term makes small particles evolve extremely rapidly. We use <strong>adaptive substepping</strong> inside each dt:</p>
+<div class="eq-center"><span class="eq-pill">n<sub>sub</sub> = max(10, ⌈dt · M / r<sub>min</sub>² · 2⌉)</span></div>
+<p>Particles below R<sub>min</sub> during any sub-step are immediately removed.</p></div>
+
+<h2 class="q-section-title">🔬 Exploration Questions</h2>
+
+<div class="q-card"><span class="q-badge">Question 1</span>
+<p class="q-text">Effect of T, Q, and M₀ — which has a faster effect?</p>
+<div class="q-answer"><strong>T and Q</strong> reside inside the exponent of the Arrhenius equation, so changes have an <strong>exponential</strong> effect. <strong>M₀</strong> is a linear multiplier — doubling it doubles the rate. Conclusion: T and Q have a much more profound effect.</div></div>
+
+<div class="q-card"><span class="q-badge">Question 2</span>
+<p class="q-text">How do different initial size ranges affect the outcome?</p>
+<div class="q-answer"><strong>Broad distribution</strong>: Massive driving force causes rapid initial coarsening. <strong>Homogeneous (Max=Min)</strong>: All radii equal R<sub>c</sub>, so dr/dt = 0 — the system is metastable until floating-point noise or Brownian motion breaks symmetry.</div></div>
+
+<div class="q-card"><span class="q-badge">Question 3</span>
+<p class="q-text">Ultimate Fate: one particle or a critical size?</p>
+<div class="q-answer">The system evolves into <strong>one single massive particle</strong>. Ostwald ripening minimizes total interfacial energy; the lowest energy state is a single sphere with minimum surface-area-to-volume ratio.</div></div>
+
+<div class="code-section"><div class="theory-step"><div class="step-num">Step 03</div><h2>Under the Hood: Radius Update</h2>
+<p>The core radius-update loop with adaptive substepping:</p></div>
+<div class="code-block"><span class="cm">// Arrhenius mobility</span>
+<span class="kw">const</span> kB = <span class="num">8.617333262145e-5</span>;
+<span class="kw">const</span> M = M0 * Math.<span class="fn">exp</span>(-Q / (kB * T));
+
+<span class="cm">// Adaptive substepping</span>
+<span class="kw">const</span> rSmall = Math.<span class="fn">min</span>(...active.map(p => p.r));
+<span class="kw">const</span> nSub = Math.<span class="fn">max</span>(<span class="num">10</span>, Math.<span class="fn">ceil</span>(dt*M/(rSmall**<span class="num">2</span>)*<span class="num">2</span>));
+<span class="kw">const</span> dtSub = dt / nSub;
+
+<span class="kw">for</span> (<span class="kw">let</span> s = <span class="num">0</span>; s &lt; nSub; s++) {
+  <span class="kw">const</span> alive = particles.<span class="fn">filter</span>(p => p.active);
+  <span class="kw">const</span> sumInvR = alive.<span class="fn">reduce</span>((s,p) => s+<span class="num">1</span>/p.r, <span class="num">0</span>);
+  <span class="kw">const</span> Rc = alive.length / sumInvR;
+  <span class="kw">for</span> (<span class="kw">const</span> p <span class="kw">of</span> alive) {
+    p.r += dtSub * (M/p.r**<span class="num">2</span>) * (p.r/Rc - <span class="num">1</span>);
+    <span class="kw">if</span> (p.r &lt; Rmin) p.active = <span class="kw">false</span>;
+  }
+}</div></div>
+</div></div>
+
+<script>
+const kB=8.617333262145e-5;
+const COLORS=["#E06C75","#61AFEF","#98C379","#D19A66","#C678DD","#56B6C2","#E5C07B","#BE5046","#7EC8E3","#A3BE8C","#EBCB8B","#B48EAD","#88C0D0","#BF616A","#D08770","#5E81AC","#8FBCBB","#A3507A","#4C9A8F","#CF9E6E","#6C8EBF","#D4A5A5","#9ACD32","#FF7F50","#87CEEB","#DDA0DD","#F0E68C","#20B2AA","#FF6347","#778899"];
+let particles=[],running=false,simTime=0;
+const hist={time:[],avgR:[],Rc:[],count:[]};
+const canvas=document.getElementById("simCanvas"),ctx=canvas.getContext("2d");
+const plotRC=document.getElementById("plotR"),plotNC=document.getElementById("plotN");
+const caption=document.getElementById("caption"),btnStart=document.getElementById("btnStart");
+
+function P(){return{N:+document.getElementById("inN").value,T:+document.getElementById("inT").value,rMin:+document.getElementById("inRmin").value,rMax:+document.getElementById("inRmax").value,rTh:+document.getElementById("inRth").value,M0:+document.getElementById("inM0").value,Q:+document.getElementById("inQ").value,dt:+document.getElementById("inDt").value,brown:document.getElementById("chkBrown").checked}}
+
+function initParticles(){const p=P(),W=canvas.width,H=canvas.height;particles=[];
+for(let i=0;i<p.N;i++){const r=p.rMin+Math.random()*(p.rMax-p.rMin);
+particles.push({x:r+Math.random()*(W-2*r),y:r+Math.random()*(H-2*r),r,color:COLORS[i%COLORS.length],active:true})}
+simTime=0;hist.time.length=0;hist.avgR.length=0;hist.Rc.length=0;hist.count.length=0}
+
+function resizeCanvas(){const w=document.getElementById("canvas-wrap"),c=document.getElementById("caption");
+canvas.width=w.clientWidth;canvas.height=w.clientHeight-c.offsetHeight}
+
+function doReset(){running=false;btnStart.textContent="▶ Start";btnStart.classList.remove("running");
+resizeCanvas();initParticles();updateStats();draw();drawPlots()}
+
+function toggleRun(){running=!running;
+if(running){btnStart.textContent="⏸ Pause";btnStart.classList.add("running");requestAnimationFrame(tick)}
+else{btnStart.textContent="▶ Start";btnStart.classList.remove("running")}}
+
+function draw(){const W=canvas.width,H=canvas.height;ctx.clearRect(0,0,W,H);ctx.fillStyle="#1e222a";ctx.fillRect(0,0,W,H);
+for(const p of particles){if(!p.active)continue;
+const g=ctx.createRadialGradient(p.x-p.r*.3,p.y-p.r*.3,p.r*.1,p.x,p.y,p.r);
+g.addColorStop(0,"rgba(255,255,255,0.35)");g.addColorStop(.5,p.color);g.addColorStop(1,"rgba(0,0,0,0.2)");
+ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+ctx.strokeStyle="rgba(0,0,0,0.25)";ctx.lineWidth=.5;ctx.stroke()}
+caption.textContent="Ostwald Ripening · "+particles.filter(p=>p.active).length+" Particles"}
+
+function updateStats(){const p=P(),active=particles.filter(p=>p.active),count=active.length;
+if(!count)return;
+const avgR=active.reduce((s,p)=>s+p.r,0)/count;
+const sumInvR=active.reduce((s,p)=>s+1/p.r,0);const Rc=count/sumInvR;
+const Mob=p.M0*Math.exp(-p.Q/(kB*p.T));
+hist.time.push(simTime);hist.avgR.push(avgR);hist.Rc.push(Rc);hist.count.push(count);
+if(hist.time.length>500){hist.time.shift();hist.avgR.shift();hist.Rc.shift();hist.count.shift()}
+document.getElementById("sTime").innerHTML=simTime.toFixed(1)+'<span class="stat-unit"> s</span>';
+document.getElementById("sCount").textContent=count;
+document.getElementById("sAvg").innerHTML=avgR.toFixed(2)+'<span class="stat-unit"> px</span>';
+document.getElementById("sRc").innerHTML=Rc.toFixed(2)+'<span class="stat-unit"> px</span>';
+document.getElementById("sMob").textContent="M = "+Mob.toExponential(2)}
+
+function drawPlot(cv,v1,c1,v2,c2){if(v1.length<2)return;const c=cv.getContext("2d"),W=cv.width,H=cv.height;
+c.clearRect(0,0,W,H);c.fillStyle="#1a1d23";c.fillRect(0,0,W,H);
+const all=[...v1,...(v2||[])];const mn=Math.min(...all),mx=Math.max(...all),rng=mx-mn||1;
+function dl(v,col){c.strokeStyle=col;c.lineWidth=1.5;c.beginPath();
+for(let i=0;i<v.length;i++){const x=(i/(v.length-1))*W,y=H-((v[i]-mn)/rng)*(H-8)-4;i===0?c.moveTo(x,y):c.lineTo(x,y)}c.stroke()}
+dl(v1,c1);if(v2&&v2.length>1)dl(v2,c2)}
+function drawPlots(){drawPlot(plotRC,hist.avgR,"#98c379",hist.Rc,"#e5c07b");drawPlot(plotNC,hist.count,"#e06c75",null,null)}
+
+function simStep(){const p=P(),W=canvas.width,H=canvas.height;
+const active=particles.filter(pp=>pp.active);if(active.length<=1)return;
+const Mob=p.M0*Math.exp(-p.Q/(kB*p.T));
+const rSmall=Math.min(...active.map(pp=>pp.r));
+const nSub=Math.max(10,Math.ceil(p.dt*Mob/(rSmall*rSmall)*2));const dtSub=p.dt/nSub;
+for(let s=0;s<nSub;s++){const alive=particles.filter(pp=>pp.active);if(alive.length<=1)break;
+const sumInvR=alive.reduce((acc,pp)=>acc+1/pp.r,0);const Rc=alive.length/sumInvR;
+for(const pp of alive){pp.r+=dtSub*(Mob/(pp.r*pp.r))*(pp.r/Rc-1);if(pp.r<p.rTh)pp.active=false}}
+if(p.brown){for(const pp of particles){if(!pp.active)continue;
+pp.x+=(Math.random()-.5)*.3;pp.y+=(Math.random()-.5)*.3;
+pp.x=Math.max(pp.r,Math.min(W-pp.r,pp.x));pp.y=Math.max(pp.r,Math.min(H-pp.r,pp.y))}}
+simTime+=p.dt}
+
+function tick(){if(!running)return;simStep();updateStats();draw();drawPlots();requestAnimationFrame(tick)}
+function toggleModal(){document.getElementById("modal-overlay").classList.toggle("open")}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("modal-overlay").classList.remove("open")});
+
+window.addEventListener("resize",()=>{resizeCanvas();draw()});
+resizeCanvas();initParticles();updateStats();draw();drawPlots();
+</script>
+</body>
+</html>
