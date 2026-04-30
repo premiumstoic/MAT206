@@ -76,16 +76,17 @@ export default function NucleationSimulation() {
       if (drop.fading && drop.opacity <= 0) continue;
       const rPx = drop.r_nm / scale;
       if (rPx < 0.5) {
-        ctx.fillStyle = "rgba(0, 255, 255, 0.8)";
-        ctx.fillRect(drop.x, drop.y, 1, 1);
-        continue;
+        // Sub-pixel indicator: bright cyan 1px dot
+        ctx.fillStyle = "rgba(0,255,255,0.8)";
+        ctx.fillRect(drop.x - 0.5, drop.y - 0.5, 1, 1);
+      } else {
+        const g = ctx.createRadialGradient(drop.x - rPx * 0.25, drop.y - rPx * 0.25, rPx * 0.1, drop.x, drop.y, rPx);
+        const a = drop.fading ? drop.opacity : 0.55;
+        g.addColorStop(0, `rgba(180,220,255,${Math.min(a + 0.2, 0.9)})`);
+        g.addColorStop(0.6, `rgba(80,160,240,${a})`);
+        g.addColorStop(1, `rgba(30,80,180,${a * 0.5})`);
+        ctx.beginPath(); ctx.arc(drop.x, drop.y, rPx, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
       }
-      const g = ctx.createRadialGradient(drop.x - rPx * 0.25, drop.y - rPx * 0.25, rPx * 0.1, drop.x, drop.y, rPx);
-      const a = drop.fading ? drop.opacity : 0.55;
-      g.addColorStop(0, `rgba(180,220,255,${Math.min(a + 0.2, 0.9)})`);
-      g.addColorStop(0.6, `rgba(80,160,240,${a})`);
-      g.addColorStop(1, `rgba(30,80,180,${a * 0.5})`);
-      ctx.beginPath(); ctx.arc(drop.x, drop.y, rPx, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
     }
   }, [scale]);
 

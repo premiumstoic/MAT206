@@ -174,11 +174,11 @@ legend{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:
 
 <div class="q-card"><span class="q-badge">Question 7</span>
 <p class="q-text">The "Invisible Droplet" Phenomenon: Why does the Nucleation counter go up, but I don't see any droplets forming?</p>
-<div class="q-answer">This simulation spans multiple scales! When a droplet successfully overcomes the energy barrier, it spawns at the <strong>critical radius</strong> ($r^*$), which is typically on the order of fractions of a nanometer. If your visual scale is 10 nm/pixel, the newly formed droplet is physically smaller than a single pixel. We draw a tiny <strong>bright cyan indicator dot</strong> to show you where microscopic droplets are hiding. They rely purely on kinetic growth to eventually become macroscopic, visible droplets.</div></div>
+<div class="q-answer">This simulation spans multiple scales! When a droplet successfully overcomes the energy barrier, it spawns at the <strong>critical radius</strong> (r*), which is typically on the order of fractions of a nanometer. If your visual scale is 10 nm/pixel, the newly formed droplet is physically smaller than a single pixel. We draw a tiny <strong>bright cyan indicator dot</strong> to show you where microscopic droplets are hiding. They rely purely on kinetic growth to eventually become macroscopic, visible droplets.</div></div>
 
 <div class="q-card"><span class="q-badge">Question 8</span>
 <p class="q-text">How do I make these "invisible" sub-pixel seeds grow fast enough to see them?</p>
-<div class="q-answer">You must adjust the kinetic parameters, specifically the <strong>Activation Energy (Q)</strong>. The growth rate is governed by Arrhenius kinetics: $dR/dt \propto \exp(-Q/kT)$. Because $Q$ is inside a negative exponent, decreasing the activation energy causes the droplet mobility to skyrocket exponentially. If $Q$ is too high, the droplets successfully nucleate but are trapped at microscopic sizes. Lowering $Q$ allows them to rapidly bloom into visible rain.</div></div>
+<div class="q-answer">You must adjust the kinetic parameters, specifically the <strong>Activation Energy (Q)</strong>. The growth rate is governed by Arrhenius kinetics: dR/dt ∝ exp(−Q/kT). Because Q is inside a negative exponent, decreasing the activation energy causes the droplet mobility to skyrocket exponentially. If Q is too high, the droplets successfully nucleate but are trapped at microscopic sizes. Lowering Q allows them to rapidly bloom into visible rain.</div></div>
 
 <div class="code-section"><div class="theory-step"><div class="step-num">Step 04</div><h2>Under the Hood</h2></div>
 <div class="code-block"><span class="cm">// Antoine → pSat</span>
@@ -235,11 +235,11 @@ else{b.textContent="▶ Start";b.classList.remove("running");if(intv)clearInterv
 function draw(){const W=canvas.width,H=canvas.height,p=P();ctx.clearRect(0,0,W,H);ctx.fillStyle="#0d1117";ctx.fillRect(0,0,W,H);
 for(const d of dust){ctx.fillStyle="rgba(160,140,100,0.7)";ctx.beginPath();ctx.arc(d.x,d.y,2,0,Math.PI*2);ctx.fill()}
 for(const d of drops){if(d.fading&&d.opacity<=0)continue;const rPx=d.r_nm/p.scale;
-if(rPx<.5){ctx.fillStyle="rgba(0,255,255,0.8)";ctx.fillRect(d.x,d.y,1,1);continue}
-const g=ctx.createRadialGradient(d.x-rPx*.25,d.y-rPx*.25,rPx*.1,d.x,d.y,rPx);
+if(rPx<0.5){ctx.fillStyle="rgba(0,255,255,0.8)";ctx.fillRect(d.x-0.5,d.y-0.5,1,1)}
+else{const g=ctx.createRadialGradient(d.x-rPx*.25,d.y-rPx*.25,rPx*.1,d.x,d.y,rPx);
 const a=d.fading?d.opacity:.55;g.addColorStop(0,`rgba(180,220,255,${Math.min(a+.2,.9)})`);
 g.addColorStop(.6,`rgba(80,160,240,${a})`);g.addColorStop(1,`rgba(30,80,180,${a*.5})`);
-ctx.beginPath();ctx.arc(d.x,d.y,rPx,0,Math.PI*2);ctx.fillStyle=g;ctx.fill()}
+ctx.beginPath();ctx.arc(d.x,d.y,rPx,0,Math.PI*2);ctx.fillStyle=g;ctx.fill()}}
 document.getElementById("caption").textContent="Water Droplet Nucleation · "+drops.filter(d=>!d.fading).length+" Droplets · "+dust.length+" Dust"}
 
 function updateStats(){const p=P(),tk=p.tc+273.15,pp=ATMOS[p.ai].p,ps=pSat(p.tc),ss=pp>ps;
