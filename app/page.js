@@ -81,6 +81,16 @@ const assignments = [
     featured: true,
     image: "/images/ostwald_ripening_card.png",
   },
+  {
+    week: 11,
+    slug: "recit11",
+    title: "Droplet Nucleation",
+    description:
+      "Simulate water droplet nucleation and growth using classical nucleation theory, the Antoine equation, and Arrhenius kinetics.",
+    status: "active",
+    featured: true,
+    image: "/images/water_nucleation_card.png",
+  },
 ];
 
 function StatusBadge({ status }) {
@@ -148,7 +158,7 @@ export default function HomePage() {
         ))}
 
         {/* Placeholder for future weeks */}
-        {[5].map((week) => (
+        {[8, 9].map((week) => (
           <article
             key={week}
             className="assignment-card"
