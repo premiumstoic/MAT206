@@ -172,6 +172,14 @@ legend{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:
 <p class="q-text">Favorable Thermodynamics with No Rain?</p>
 <div class="q-answer">Yes — high γ prevents nucleation despite favorable Δg<sub>v</sub>. Or: many droplets nucleate but extremely low M₀ / high Q prevents growth to rain threshold.</div></div>
 
+<div class="q-card"><span class="q-badge">Question 7</span>
+<p class="q-text">The "Invisible Droplet" Phenomenon: Why does the Nucleation counter go up, but I don't see any droplets forming?</p>
+<div class="q-answer">This simulation spans multiple scales! When a droplet successfully overcomes the energy barrier, it spawns at the <strong>critical radius</strong> ($r^*$), which is typically on the order of fractions of a nanometer. If your visual scale is 10 nm/pixel, the newly formed droplet is physically smaller than a single pixel. We draw a tiny <strong>bright cyan indicator dot</strong> to show you where microscopic droplets are hiding. They rely purely on kinetic growth to eventually become macroscopic, visible droplets.</div></div>
+
+<div class="q-card"><span class="q-badge">Question 8</span>
+<p class="q-text">How do I make these "invisible" sub-pixel seeds grow fast enough to see them?</p>
+<div class="q-answer">You must adjust the kinetic parameters, specifically the <strong>Activation Energy (Q)</strong>. The growth rate is governed by Arrhenius kinetics: $dR/dt \propto \exp(-Q/kT)$. Because $Q$ is inside a negative exponent, decreasing the activation energy causes the droplet mobility to skyrocket exponentially. If $Q$ is too high, the droplets successfully nucleate but are trapped at microscopic sizes. Lowering $Q$ allows them to rapidly bloom into visible rain.</div></div>
+
 <div class="code-section"><div class="theory-step"><div class="step-num">Step 04</div><h2>Under the Hood</h2></div>
 <div class="code-block"><span class="cm">// Antoine → pSat</span>
 <span class="kw">const</span> pS = <span class="num">10</span>**(<span class="num">8.07131</span>-<span class="num">1730.63</span>/(<span class="num">233.426</span>+T_C))*<span class="num">133.322</span>;
@@ -226,7 +234,8 @@ else{b.textContent="▶ Start";b.classList.remove("running");if(intv)clearInterv
 
 function draw(){const W=canvas.width,H=canvas.height,p=P();ctx.clearRect(0,0,W,H);ctx.fillStyle="#0d1117";ctx.fillRect(0,0,W,H);
 for(const d of dust){ctx.fillStyle="rgba(160,140,100,0.7)";ctx.beginPath();ctx.arc(d.x,d.y,2,0,Math.PI*2);ctx.fill()}
-for(const d of drops){if(d.fading&&d.opacity<=0)continue;const rPx=d.r_nm/p.scale;if(rPx<.3)continue;
+for(const d of drops){if(d.fading&&d.opacity<=0)continue;const rPx=d.r_nm/p.scale;
+if(rPx<.5){ctx.fillStyle="rgba(0,255,255,0.8)";ctx.fillRect(d.x,d.y,1,1);continue}
 const g=ctx.createRadialGradient(d.x-rPx*.25,d.y-rPx*.25,rPx*.1,d.x,d.y,rPx);
 const a=d.fading?d.opacity:.55;g.addColorStop(0,`rgba(180,220,255,${Math.min(a+.2,.9)})`);
 g.addColorStop(.6,`rgba(80,160,240,${a})`);g.addColorStop(1,`rgba(30,80,180,${a*.5})`);
@@ -254,9 +263,9 @@ const dGh=(16*Math.PI*p.gamma**3)/(3*dgv**2);
 const tRad=p.theta*Math.PI/180,cosT=Math.cos(tRad),fT=(2-3*cosT+cosT**3)/4;
 const dGhet=fT*dGh;
 if(p.hom){const P_=Math.min(1,Math.max(0,p.A*p.dt*Math.exp(-dGh/(kB*tk))));
-if(Math.random()<P_){const rI=rCrit*1e9*1.05;drops.push({x:10+Math.random()*(W-20),y:10+Math.random()*(H-20),r_nm:rI,fading:false,opacity:1});cnt.hom++}else cnt.fail++}
+if(Math.random()<P_){const rI=rCrit*1e9;drops.push({x:10+Math.random()*(W-20),y:10+Math.random()*(H-20),r_nm:rI,fading:false,opacity:1});cnt.hom++}else cnt.fail++}
 if(p.het&&dust.length>0){const P_=Math.min(1,Math.max(0,p.A*p.dt*Math.exp(-dGhet/(kB*tk))));
-if(Math.random()<P_){const d=dust[Math.floor(Math.random()*dust.length)];const rI=rCrit*1e9*1.05;
+if(Math.random()<P_){const d=dust[Math.floor(Math.random()*dust.length)];const rI=rCrit*1e9;
 drops.push({x:d.x,y:d.y,r_nm:rI,fading:false,opacity:1});cnt.het++}else cnt.fail++}}
 const Qj=(p.Q*1000)/NA,Mob=p.M0*Math.exp(-Qj/(kB*tk));
 for(const d of drops){if(d.fading){d.opacity-=.03;continue}

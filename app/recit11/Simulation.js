@@ -75,7 +75,11 @@ export default function NucleationSimulation() {
     for (const drop of dropsRef.current) {
       if (drop.fading && drop.opacity <= 0) continue;
       const rPx = drop.r_nm / scale;
-      if (rPx < 0.3) continue;
+      if (rPx < 0.5) {
+        ctx.fillStyle = "rgba(0, 255, 255, 0.8)";
+        ctx.fillRect(drop.x, drop.y, 1, 1);
+        continue;
+      }
       const g = ctx.createRadialGradient(drop.x - rPx * 0.25, drop.y - rPx * 0.25, rPx * 0.1, drop.x, drop.y, rPx);
       const a = drop.fading ? drop.opacity : 0.55;
       g.addColorStop(0, `rgba(180,220,255,${Math.min(a + 0.2, 0.9)})`);
@@ -119,7 +123,7 @@ export default function NucleationSimulation() {
       if (enHom) {
         const P = Math.min(1, Math.max(0, prefA * physDt * Math.exp(-dG_hom / (kB_J * T_K))));
         if (Math.random() < P) {
-          const rI = rCrit * 1e9 * 1.05;
+          const rI = rCrit * 1e9;
           dropsRef.current.push({ x: 10 + Math.random() * (CW - 20), y: 10 + Math.random() * (CH - 20), r_nm: rI, type: "hom", fading: false, opacity: 1 });
           cc.hom++;
         } else cc.fail++;
@@ -128,7 +132,7 @@ export default function NucleationSimulation() {
         const P = Math.min(1, Math.max(0, prefA * physDt * Math.exp(-dG_het / (kB_J * T_K))));
         if (Math.random() < P) {
           const d = dustRef.current[Math.floor(Math.random() * dustRef.current.length)];
-          const rI = rCrit * 1e9 * 1.05;
+          const rI = rCrit * 1e9;
           dropsRef.current.push({ x: d.x, y: d.y, r_nm: rI, type: "het", fading: false, opacity: 1 });
           cc.het++;
         } else cc.fail++;

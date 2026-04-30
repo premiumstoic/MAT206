@@ -194,6 +194,22 @@ export default function Recit11Page() {
               </div>
             </div>
 
+            <div className="question-card">
+              <span className="q-badge">Question 7</span>
+              <p className="q-text">The "Invisible Droplet" Phenomenon: Why does the Nucleation counter go up, but I don't see any droplets forming?</p>
+              <div className="q-answer">
+                <p>This simulation spans multiple scales! When a droplet successfully overcomes the energy barrier, it spawns at the <strong>critical radius</strong> ($r^*$), which is typically on the order of fractions of a nanometer. If your visual scale is 10 nm/pixel, the newly formed droplet is physically smaller than a single pixel. We draw a tiny <strong>bright cyan indicator dot</strong> to show you where microscopic droplets are hiding. They rely purely on kinetic growth to eventually become macroscopic, visible droplets.</p>
+              </div>
+            </div>
+
+            <div className="question-card">
+              <span className="q-badge">Question 8</span>
+              <p className="q-text">How do I make these "invisible" sub-pixel seeds grow fast enough to see them?</p>
+              <div className="q-answer">
+                <p>You must adjust the kinetic parameters, specifically the <strong>Activation Energy (Q)</strong>. The growth rate is governed by Arrhenius kinetics: $dR/dt \propto \exp(-Q/kT)$. Because $Q$ is inside a negative exponent, decreasing the activation energy causes the droplet mobility to skyrocket exponentially. If $Q$ is too high, the droplets successfully nucleate but are trapped at microscopic sizes. Lowering $Q$ allows them to rapidly bloom into visible rain.</p>
+              </div>
+            </div>
+
           </div>
         </section>
 
