@@ -107,8 +107,11 @@ export default function RootLayout({ children }) {
                 </div>
               </a>
               <nav className="site-nav">
-                <a href="/" className="active">
+                <a href="/">
                   Assignments
+                </a>
+                <a href="/feedback">
+                  Feedback
                 </a>
               </nav>
             </div>
